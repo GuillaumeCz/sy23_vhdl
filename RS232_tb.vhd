@@ -47,9 +47,8 @@ ARCHITECTURE behavior OF RS232_tb IS
          datas : IN  std_logic_vector(7 downto 0);
          clk_div : IN  std_logic_vector(7 downto 0);
          empty : OUT  std_logic;
-			x: out integer range 0 to 4;
-			y: out STD_LOGIC;
-			z: out STD_LOGIC;
+			x: out STD_LOGIC_VECTOR (1 downto 0);
+			z: out STD_LOGIC_VECTOR (2 downto 0);
          TX : OUT  std_logic
         );
     END COMPONENT;
@@ -65,9 +64,8 @@ ARCHITECTURE behavior OF RS232_tb IS
  	--Outputs
    signal empty : std_logic;
    signal TX : std_logic;
-	signal x: integer range 0 to 4;
-	signal y : std_logic;
-	signal z : std_logic;
+   signal x: STD_LOGIC_VECTOR (1 downto 0);
+   signal z : STD_LOGIC_VECTOR (2 downto 0);
 
    -- Clock period definitions
    constant clk_period : time := 10 ns;
@@ -84,7 +82,6 @@ BEGIN
           clk_div => clk_div,
           empty => empty,
 			 x => x,
-			 y => y,
 			 z => z,
           TX => TX
         );
@@ -104,6 +101,7 @@ BEGIN
    stim_proc: process
    begin		
       -- hold reset state for 100 ns.
+	    start <= '0';
 		datas <= "10101100";
 		rst <= '1';
       wait for 100 ns;
@@ -111,9 +109,6 @@ BEGIN
 
 
       wait for clk_period*10;
-		
-		
-		
 		start <= '1';
    -- insert stimulus here 
 
