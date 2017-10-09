@@ -1,8 +1,8 @@
 CC=ghdl
 PROG=RS232
-SRC=$(PROG).vhdl
+SRC=$(PROG).vhd
 VCD=$(PROG).vcd
-SRCTB=$(PROG)_tb.vhdl
+SRCTB=$(PROG)_tb.vhd
 ENTITE=$(PROG)_tb
 OPTIONS= --ieee=synopsys
 STOPTIME=400ns
