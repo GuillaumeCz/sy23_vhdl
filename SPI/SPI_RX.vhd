@@ -36,7 +36,6 @@ begin
 	elsif rising_edge(SPI_SCK) then
 		current_state 	<= next_state;
 		spicounter 		<= spicounter_buff;
-		data_out 		<= data_buffer;
 	end if;
 end process clock_tick;
 
@@ -52,7 +51,7 @@ begin
 			spicounter_buff 	<= (others => '0');
 			
 		when bitsdata =>
-			if spicounter < N then
+			if spicounter <= N then
 				next_state 		<= bitsdata;
 				data_buffer 	<= data_buffer(6 downto 0) & SPI_MISO;
 				spicounter_buff	<= spicounter_buff + 1;
@@ -62,8 +61,12 @@ begin
 	end case;
 end process change_state;
 
-SPI_CS 	<= '1' when current_state = idle else '0';
-		
+-- Circuit select 
+SPI_CS 			<= '1' when current_state = idle else '0';
+
+-- Data out
+data_out 		<= data_buffer;
+
 y <= std_logic_vector(spicounter);
 with current_state select
 x <= "00" when idle,

@@ -1,35 +1,5 @@
---------------------------------------------------------------------------------
--- Company: 
--- Engineer:
---
--- Create Date:   14:01:25 10/04/2017
--- Design Name:   
--- Module Name:   /home/uvs/Documents/Menard_Zeissloff/TP2_liaison_serie/RS232_tb.vhd
--- Project Name:  TP2_liaison_serie
--- Target Device:  
--- Tool versions:  
--- Description:   
--- 
--- VHDL Test Bench Created by ISE for module: RS232
--- 
--- Dependencies:
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
---
--- Notes: 
--- This testbench has been automatically generated using types std_logic and
--- std_logic_vector for the ports of the unit under test.  Xilinx recommends
--- that these types always be used for the top-level I/O of a design in order
--- to guarantee that the testbench will bind correctly to the post-implementation 
--- simulation model.
---------------------------------------------------------------------------------
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
- 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
  
 ENTITY SPI_RX_tb IS
@@ -38,7 +8,6 @@ END SPI_RX_tb;
 ARCHITECTURE behavior OF SPI_RX_tb IS 
  
     -- Component Declaration for the Unit Under Test (UUT)
- 
  
     COMPONENT SPI_RX
     Generic (N : integer := 8);
@@ -113,7 +82,7 @@ BEGIN
 	
 	  spi_start <= '1';
       wait for clk_period*1;
-	  spi_start <= '0';			--start of the sequence 0111 0100 0x74
+	  spi_start <= '0';			--start of the sequence 0011 0101 0x35
 	  RX <= '0';
 	  wait for clk_period*1;
 	  RX <= '0';
