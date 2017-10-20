@@ -7,70 +7,105 @@ entity SPI_RX is
     Port ( SPI_MISO : 	in  STD_LOGIC;								-- data received from memory
            spi_start : 	in  STD_LOGIC;								-- transmission start pulse
            rst : 		in  STD_LOGIC;								-- reset
-           SPI_SCK : 	in  STD_LOGIC;								-- clock
+		   clk :		in	STD_LOGIC;								-- system clock
+           SPI_SCK : 	out  STD_LOGIC;								-- SPI clock
            SPI_CS : 	out  STD_LOGIC;								-- select circuit
-           data_out : 	out  STD_LOGIC_VECTOR (N-1 downto 0);		-- data received on N bits
-		   x: out STD_LOGIC_VECTOR (1 downto 0);
-		   y: out STD_LOGIC_VECTOR (N-1 downto 0));
+           data_out : 	out  STD_LOGIC_VECTOR (N-1 downto 0));		-- data received on N bits
 end SPI_RX;
 
 architecture Behavioral of SPI_RX is
 
---State machine
+	component diviseur_generique
+	Generic(clkdiv : integer := 2);
+    Port ( clk : in  STD_LOGIC;
+           rst : in  STD_LOGIC;
+           tc0 : out  STD_LOGIC;
+           tc1 : out  STD_LOGIC;
+           clk_out : out  STD_LOGIC);
+	end component;
+
+-- constant
+constant bauds : integer := 115200;
+constant sysclk : real := 50.0e6 ; -- 50MHz
+constant clkdiv : integer := integer(sysclk / real(bauds));
+--constant DIVTX : std_logic_vector(15 downto 0) := std_logic_vector(to_unsigned(N,16));
+	
+--state_next machine
 type T_state is (idle, bitsdata);
-signal next_state, current_state : T_state;
+signal state_next, state : T_state;
 
---Counter
-signal spicounter : 		unsigned (N-1 downto 0) 			:= (others => '0');
+-- Counter
+signal spicounter, spicounter_next : 		unsigned (N-1 downto 0) 			:= (others => '0');		-- Number of bit received counter
 
---buffer
-signal data_buffer : 		STD_LOGIC_VECTOR (N-1 downto 0)		:= (others => '0');		-- Buffer for data
-signal spicounter_buff :	unsigned (N-1 downto 0) 			:= (others => '0');		-- Buffer for spicounter
+-- data buffer
+signal data, data_next :					STD_LOGIC_VECTOR (N-1 downto 0)		:= (others => '0');		-- data received
+
+-- clock
+signal divided_clock : 						STD_LOGIC							:= '0';
+signal tc0, tc1 :							STD_LOGIC							:= '0';
 
 begin
 
-clock_tick: process(SPI_SCK)
+-- Clock divider
+   clk_divider: diviseur_generique 
+   Generic map (
+		  clkdiv	=> clkdiv )
+   PORT MAP (
+		  clk	=> clk,
+          rst 	=> rst,
+          tc0	=> tc0,
+          tc1 	=> tc1,
+		  clk_out  => divided_clock
+		  );
+
+-- Update the state
+clock_tick: process(clk)
 begin
 	if rst = '1' then
-		current_state 	<= idle;
-	elsif rising_edge(SPI_SCK) then
-		current_state 	<= next_state;
-		spicounter 		<= spicounter_buff;
+		state 			<= idle;
+	elsif rising_edge(clk) then
+		state 			<= state_next;
+		data			<= data_next;
+		spicounter 		<= spicounter_next;
 	end if;
 end process clock_tick;
 
-change_state: process(spicounter, spi_start)
+-- Calculate the next step
+change_state: process(state, spicounter, spi_start, divided_clock)
 begin
-	next_state 					<= current_state;
-	case current_state is
+	state_next 							<= state;
+	spicounter_next						<= spicounter;
+	data_next							<= data;
+	
+	case state is
 		when idle =>
 			if spi_start = '1' then
-				next_state 		<= bitsdata;
+				state_next 				<= bitsdata;
 			end if;
-			data_buffer			<= (others => '0');
-			spicounter_buff 	<= (others => '0');
+			data_next					<= (others => '0');	-- reset counter 
+			spicounter_next 			<= (others => '0');
 			
 		when bitsdata =>
+			if rising_edge(divided_clock) then							-- Synchronize the reception of data on the SPI clock 
+				data_next 				<= data(6 downto 0) & SPI_MISO; -- Add on the LSB the received bit.
+				spicounter_next			<= spicounter + 1;				-- Add one to the counter of bit received
+			end if;
 			if spicounter <= N then
-				next_state 		<= bitsdata;
-				data_buffer 	<= data_buffer(6 downto 0) & SPI_MISO;
-				spicounter_buff	<= spicounter_buff + 1;
+				state_next 				<= bitsdata;
 			else
-				next_state 		<= idle;
+				state_next 				<= idle;
 			end if;
 	end case;
 end process change_state;
 
 -- Circuit select 
-SPI_CS 			<= '1' when current_state = idle else '0';
+SPI_CS 			<= '1' when state_next = idle else '0';
 
 -- Data out
-data_out 		<= data_buffer;
+data_out 		<= data_next;
 
-y <= std_logic_vector(spicounter);
-with current_state select
-x <= "00" when idle,
-	 "10" when bitsdata;
+-- SPI Clock
+SPI_SCK <= divided_clock;
 
 end Behavioral;
 
