@@ -28,7 +28,6 @@ architecture Behavioral of SPI_RX is
 constant bauds : integer := 115200;
 constant sysclk : real := 50.0e6 ; -- 50MHz
 constant clkdiv : integer := integer(sysclk / real(bauds));
---constant DIVTX : std_logic_vector(15 downto 0) := std_logic_vector(to_unsigned(N,16));
 	
 --state_next machine
 type T_state is (idle, bitsdata);
@@ -59,7 +58,7 @@ begin
 		  );
 
 -- Update the state
-clock_tick: process(clk)
+clock_tick: process(clk, rst)
 begin
 	if rst = '1' then
 		state 			<= idle;
@@ -71,7 +70,7 @@ begin
 end process clock_tick;
 
 -- Calculate the next step
-change_state: process(state, spicounter, spi_start, divided_clock)
+change_state: process(state, spi_start, spicounter, divided_clock)
 begin
 	state_next 							<= state;
 	spicounter_next						<= spicounter;
@@ -87,7 +86,7 @@ begin
 			
 		when bitsdata =>
 			if rising_edge(divided_clock) then							-- Synchronize the reception of data on the SPI clock 
-				data_next 				<= data(6 downto 0) & SPI_MISO; -- Add on the LSB the received bit.
+				data_next 				<= data(N-2 downto 0) & SPI_MISO; -- Add on the LSB the received bit.
 				spicounter_next			<= spicounter + 1;				-- Add one to the counter of bit received
 			end if;
 			if spicounter <= N then
@@ -102,7 +101,7 @@ end process change_state;
 SPI_CS 			<= '1' when state_next = idle else '0';
 
 -- Data out
-data_out 		<= data_next;
+data_out 		<= data;
 
 -- SPI Clock
 SPI_SCK <= divided_clock;
