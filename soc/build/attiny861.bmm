@@ -1,0 +1,8 @@
+ADDRESS_SPACE prgmem RAMB16 [0x00000000:0x00001FFF]
+      BUS_BLOCK
+        prgmem/Mrom_PM_Drd_mux00002 [7:4] PLACED = X1Y6;
+        prgmem/Mrom_PM_Drd_mux00001 [3:0] PLACED = X1Y5;
+        prgmem/Mrom_PM_Drd_mux00004 [15:12] PLACED = X1Y3 ;
+        prgmem/Mrom_PM_Drd_mux00003 [11:8] PLACED  = X1Y4;
+      END_BUS_BLOCK;
+END_ADDRESS_SPACE;
