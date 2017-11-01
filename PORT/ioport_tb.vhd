@@ -12,7 +12,9 @@ ARCHITECTURE behavior OF ioport_tb IS
     -- Component Declaration for the Unit Under Test (UUT)
  
     COMPONENT ioport
-	Generic (BASE_ADDR	: integer := 16#1B#);
+	Generic (	PORTX_ADDR : 	integer := 16#1B#;
+				DDR_ADDR :		integer	:=16#1A#;
+				PINX_ADDR :		integer	:=16#19#);
     Port ( clk : in  STD_LOGIC;
            addr : in  STD_LOGIC_VECTOR (5 downto 0);
            ioread : out  STD_LOGIC_VECTOR (7 downto 0);
@@ -59,8 +61,9 @@ BEGIN
  
 	-- Instantiate the Unit Under Test (UUT)
    uut: ioport 
-   Generic map (
-			BASE_ADDR 		=> 16#1B#)
+   Generic map (PORTX_ADDR 	=> 16#1B#,
+				DDR_ADDR 	=> 16#1A#,
+				PINX_ADDR 	=> 16#19#)
    PORT MAP (
 			clk 	=> clk,
 			addr 	=> address_in,

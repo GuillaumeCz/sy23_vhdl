@@ -28,7 +28,9 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 --use UNISIM.VComponents.all;
 
 entity ioport is
-	Generic (BASE_ADDR	: integer := 16#1B#);
+	Generic (	PORTX_ADDR :	integer := 16#1B#;
+				DDR_ADDR :		integer	:=16#1A#;
+				PINX_ADDR :		integer	:=16#19#);
     Port ( clk : in  STD_LOGIC;
            addr : in  STD_LOGIC_VECTOR (5 downto 0);
            ioread : out  STD_LOGIC_VECTOR (7 downto 0);
@@ -39,11 +41,6 @@ entity ioport is
 end ioport;
 
 architecture ioport_architecture of ioport is
-
--- Constant
-constant PORTX_ADDR :						integer										:=16#1B#;
-constant DDR_ADDR :						integer										:=16#1A#;
-constant PINX_ADDR :						integer										:=16#19#;
 
 -- Register.
 signal PORTX_register : 					STD_LOGIC_VECTOR(7 downto 0)				:= (others => 'Z');
