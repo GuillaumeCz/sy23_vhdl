@@ -4,36 +4,25 @@
 #$? 	La liste des dépendances plus récentes que la cible
 #$* 	Le nom du fichier sans suffixe
 #.PHONY: clean mrproper
+export CC=gcc
+export MAKE=make
+LISTE=`ls`
 
 
-CC=avr-gcc
-OBJCOPY=avr-objcopy
-OBJDUMP=avr-objdump
-#ASFLAGS=-mmcu=attiny261 --gdwarf2
-#CCFLAGS=-mmcu=attiny261 -Wall -gdwarf-2 -std=gnu99 -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -MD -MP -MT
-CCFLAGS=-mmcu=attiny861 -Wall -std=gnu99 -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -MD -MP -MT
-LDFLAGS=-mmcu=attiny861
-OBJCOPYFLAGS=-O ihex -R .eeprom 
-OBJDUMPFLAGS=-h -S
-
-
-DIRBUILD=../build
-SRC=porta.c
-OBJ= $(SRC:.c=.o)
-ELF=$(DIRBUILD)/pm.elf
-HEX= $(DIRBUILD)/pm.hex
-LSS= $(SRC:.c=.lss)
-MAP= $(SRC:.c=.map)
-DFILE= $(SRC:.c=.d)
-
-
-
-all: 
-	$(CC) $(CCFLAGS) $(OBJ) -c $(SRC)
-	$(CC) $(LDFLAGS) -Wl,-Map=$(MAP) -o $(ELF) $(OBJ)	
-	$(OBJCOPY) $(OBJCOPYFLAGS) $(ELF) $(HEX)
-	$(OBJDUMP) $(OBJDUMPFLAGS) $(ELF) > $(LSS)
-
+all:
+	$(MAKE) -C $(REPERTOIRE)
 	
+
 clean:
-	rm  $(DFILE) $(OBJ) $(ELF) $(MAP) $(HEX) $(LSS)
+	@for i in $(LISTE); do \
+		if test -d $$i; then \
+		  echo "clean $$i"; \
+		 if test -e $$i/Makefile; then \
+		   echo "make -C  $$i clean"; \
+		   $(MAKE) -C  $$i clean ; \
+		  else \
+		   echo "WARNING $$i/Makefile" ;\
+		 fi; \
+		fi; \
+	done  	
+

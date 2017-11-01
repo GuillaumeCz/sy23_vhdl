@@ -19,22 +19,33 @@ PMVHDFILE=${DIRPM}/pm.vhd
 HEXFILE=$(DIRBUILD)/pm.hex
 ELFFILE=$(DIRBUILD)/pm.elf
 PMMODELE=hex2vhdl/pm_modele.vhd
+REPERTOIRE=porta
 
 
-all: compile
+all: compile newvhd vhdl
 
 
 compile:
-	$(MAKE) -C c
+	$(MAKE) -C c REPERTOIRE=$(REPERTOIRE)
 	
-newbit:
-	$(DATAMEM) -bm $(BMMFILE) -bd $(ELFFILE) -bt $(BITFILE) -ob $(BITFILENEW)
+vhdl:
+	$(MAKE) -C avrtiny861
+	
+execute:
+	$(MAKE) -C avrtiny861 execute
+	
+view:
+	$(MAKE) -C avrtiny861 view
 	
 newvhd:
 	cp ${PMVHDFILE} ${PMVHDBACKFILE}	
 	${HEXTOVHDLAWK}	-v filename=$(HEXFILE) $(PMMODELE) > $(PMVHDFILE)
 	
-clean: clean-c
+clean: clean-vhdl clean-c clean-build
+
+
+clean-build:
+	rm $(HEXFILE) $(ELFFILE)	
 
 clean-c: 
 	$(MAKE) -C c clean
@@ -42,6 +53,5 @@ clean-c:
 clean-asm: 
 	$(MAKE) -C asm clean
 	
-clean-xilinx:
-	rm $(DIRBIT)/*.html $(DIRBIT)/*.ncd
-	rm -f -R  $(DIRBIT)/iseconfig $(DIRBIT)/_xmsgs
+clean-vhdl:
+	$(MAKE) -C avrtiny861 clean

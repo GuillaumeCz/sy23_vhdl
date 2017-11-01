@@ -6,7 +6,6 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 entity pm is
 	Port (
            clk    : in std_logic;
-           Rst    : in std_logic;
            PM_A   : in std_logic_vector(15 downto 0);
            PM_Drd : out std_logic_vector(15 downto 0));
 end pm;

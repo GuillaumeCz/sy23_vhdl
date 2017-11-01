@@ -1,12 +1,81 @@
 projet SOC
 
+version GHDL
+
+Faire obligatoirement le port bidirectionnel (ioport.vhd)
+Les constantes pour les registres sont déjà déclarées.
+il faut ajouter le signal registre de direction.
+Ensuite compléter le fichier timer.vhd afin qu'il génère un signal PWM 
+en mode fast-PWM uniquement :
+On utilise donc :
+les bits COM1A1, COM1A0, FOC1A et PWM1A du registre TCCR1A
+tous les bits du registre TTCR1B
+tous les bits du registre OCR1A
+
+Pour la division de fréquence par une puissance de 2, 
+il est conseillé de faire un nouveau diviseur adapté à 
+ce type de division. La sortie du prédiviseur commande l'entrée
+du diviseur, le compteur du timer est piloté par la sortie du diviseur.
+
+en option, compléter le fichier usi.vhd :
+on utilise donc :
+les bits USIWM1, USIWM0, USICS1, USICS0, USICLK et USITC du registre USICR
+tous les bits du registre USIDR
+et normalement seulement le bit USIOIF du registre USISR
+La fréquence d'émission peut se faire, par exemple, par logiciel 
+avec le bit USICLK à 0 puis à 1.
+
+
+Le projet contient tous les fichiers vhdl du soc.
+Les fichiers ioport.vhd, timer.vhd et usi.vhd sont à compléter.
+En dehors du fichier microcontroleur_test.vhd il est 
+vivement déconseillé de modifier les autres fichiers.
+
+Exemple de compilation et verification :
+- compléter le fichier ioport.vhd afin d'en faire un port 8 bits
+  bidirectionnel
+- ensuite lancer la chaîne de compilation avec par exemple, 
+  dans le répeertoire soc, la commande :
+  make REPERTOIRE=porta
+- si tout se passe bien il faut ensuite lancer la simulation avec :
+  make execute
+- et enfin visualiser les résultats avec gtkwave :
+  make view
+  
+ou encore, toujours dans le repertoire soc, étape par étape :
+make compile REPERTOIRE=porta
+make newvhd
+make vhdl
+make execute
+make view
+
 arboresence
 .
 ├── asm
+│   ├── Makefile
+│   └── porta.asm
 ├── avrtiny861
+│   ├── dm.vhd
+│   ├── IODrdmux.vhd
+│   ├── ioport.vhd
+│   ├── Makefile
+│   ├── mcu_core.vhd
+│   ├── microcontroleur_test.vhdl
+│   ├── microcontroleur.vhdl
+│   ├── pm.vhd
+│   ├── pm.vhd.back
+│   ├── timer.vhd
+│   ├── usi.vhd
+│   └── work-obj93.cf
 ├── build
+│   └── attiny861.bmm
 ├── c
+│   ├── Makefile
+│   ├── porta
+│   └── timer
 ├── hex2vhdl
+│   ├── hextovhdl.awk
+│   └── pm_modele.vhd
 ├── Makefile
 └── README
 
@@ -14,33 +83,50 @@ asm est le repertoire des fichiers source pour le
 developpement d'application en assembleur
 
 avrtiny861 est le repertoire pour la partie VHDL
-Ouvrir le projet dans ce repertoire avec ise.
 
 build est le repertoire qui contient les fichiers
 hex et elf compiles a parftir de sources c ou bien asm
 ce repertoire contient egalement le fichier bmm.
 
-c est le repertoire des fichiers source pour le
-developpement d'application en C
+c est le repertoire des projets C, un repertoire par programme
 
 hex2vhdl contient le fichier modele de la memoire de programme
 ainsi que le fichier (awk) de conversion hex vers vhdl
 
 Makefile permet de gérer la compilation et la modification du 
-fichier .bit :
-make compile : compile le code C
-make newvhd : cree le nouveau fichier pm.vhd
-make newbit : cree le nouveau fichier .bit
-make clean : efface le contenu de build et les traces de compilation
-make clean-xilinx : efface les residus du projet xilinx qui restent 
-apres la commande project->cleanup project files de ISE.
+fichier pm.vhd :
+make REPERTOIRE=projetC 
+ - compile le programme C dans le repertoire projetC
+ - creer le nouveau fichier pm.vhd
+ - compile les sources vhdl du repertoire avrtiny861
 
+make compile REPERTOIRE=projetC 
+ - compile le programme C dans le repertoire projetC
+ 
+make newvhd 
+ - creer le nouveau fichier pm.vhd
+	
+make vhdl
+ - compile les sources vhdl du repertoire avrtiny861
+	
+make execute
+ - execute la simulation
+	
+make view
+ - lance gtkwave pour visualiser les résultats
+	
+make clean
+ - efface tous les fichiers issus de la compilation et de la simulation
+	
+make clean-build
+ - efface le contenu du repertoire build
 
-pour travailler avec ise, ouvrir le projet situe dans 
-soc/avrtiny861
-afin d'accélerer le routage, il faut modifier une option de l'action
-"Place & Route" de la partie "Implement Design" en cliquant avec le 
-bouton droit sur "Place & Route" et ensuite on choisit 
-"Process Properties" puis modifier le champ de 
-"Place & Route Effort Level (Overall)" en choisissant "standard"
-Cela diminue le nettement temps de l'étape "Place & Route"
+make clean-c 
+ - efface tous les fichiers issus de la compilation C
+	
+make clean-asm 
+ - efface tous les fichiers issus de la compilation C
+	
+make clean-vhdl
+- efface les fichiers issus de la compilation VHDL
+
