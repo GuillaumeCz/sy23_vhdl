@@ -18,8 +18,6 @@ end timer;
 
 architecture timer_architecture of timer is
 
-
-
 constant OCR1A : integer := BASE_ADDR ;
 constant TCNT1 : integer := BASE_ADDR + 1;
 constant TCCR1B : integer := BASE_ADDR + 2;
@@ -30,11 +28,26 @@ signal reg_count : STD_LOGIC_VECTOR (7 downto 0);
 signal reg_ctrlA : STD_LOGIC_VECTOR (7 downto 0);
 signal reg_ctrlB : STD_LOGIC_VECTOR (7 downto 0);
 
-
-
-
-
 begin
+  clock_tick : process(clk)
+    variable a_int : natural;
+  begin
+    if rst = '1' then
+      reg_count <= (others => '0');
+      OC1A <= '1';
+      OC1Abar <= '0';
+    elsif rising_edge(clk) then
+      a_int := to_integer(unsigned(addr));
+      if to_integer(unsigned(reg_count)) >= OCR1A then
+        OC1A <= '0';
+        OC1Abar <= '1';
+      else
+        OC1A <= '1';
+        OC1Abar <= '0';
+      end if;
+      reg_count <= std_logic_vector(unsigned(reg_count)+1 );
+    end if;
+  end process clock_tick;
 
 
 	
