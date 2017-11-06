@@ -125,7 +125,7 @@ clock_tick: process(control_clock)
 	variable CS_TXRX : 	std_logic_vector (1 downto 0);
 begin
 	if (rising_edge(control_clock)) then		
-		a_int 		:= CONV_INTEGER(addr);
+		a_int 		:= to_integer(unsigned(addr));
 		rdwr 		:= rd & wr;
 		CS_TXRX		:= SPI_TX_CS & SPI_RX_CS;
 		SPI_TX_start <= '0';
