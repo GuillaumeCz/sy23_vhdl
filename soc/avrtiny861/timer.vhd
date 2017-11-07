@@ -33,12 +33,16 @@ signal tc0, tc1 : STD_LOGIC := '0';
 
 signal rst_div : STD_LOGIC := '0';
 
+-- Seuil ? 
 signal reg_compA : STD_LOGIC_VECTOR (7 downto 0);
+-- Surement le/un des compteurs ?
 signal reg_count : STD_LOGIC_VECTOR (7 downto 0);
+-- contenu du registre TCCR1A ?
 signal reg_ctrlA : STD_LOGIC_VECTOR (7 downto 0);
+-- contenu du registre TCCR1B ?
 signal reg_ctrlB : STD_LOGIC_VECTOR (7 downto 0);
 
-component diviseur_generique
+component diviseur_timer
   Generic( clkdiv : integer 2);
   Port(
         clk : in STD_LOGIC;
@@ -49,7 +53,7 @@ component diviseur_generique
 
 begin
 
-  clk_divider: diviseur_generique
+  clk_divider: diviseur_timer
   Generic map(
     clkdiv => clkdiv)
   Port map(
@@ -65,9 +69,6 @@ begin
     variable rdwr : std_logic_vector(1 downto 0);
   begin
     if rst = '1' then
-      reg_count <= (others => '0');
-      OC1A <= '1';
-      OC1Abar <= '0';
       reg_compA <= (others => 'Z');
     elsif rising_edge(control_clock) then
       a_int := to_integer(unsigned(addr));
@@ -78,7 +79,7 @@ begin
           when "10" => 
             ioread <= reg_compA;
           when "01" => 
-            reg_compA = iowrite;
+            reg_ctrlA = iowrite;
 
         end case;
         reg_compA <= TCCR1A(7) & TCCR1A(6);
@@ -87,23 +88,33 @@ begin
       if a_int = TCCR1B then
         case rdwr is 
           when "10" => NULL;
-          when "01" => reg
+          when "01" => reg_ctrlB <= iowrite;
         end case;
-        rst_div <= TCCR1B(6);
-
       end if;
 
-      if to_integer(unsigned(reg_count)) >= OCR1A then
-        OC1A <= '0';
-        OC1Abar <= '1';
-      else
-        OC1A <= '1';
-        OC1Abar <= '0';
+      if a_int = OCR1A then
+        case rdwr is
+          when "10" => NULL;
+          when "01" => reg_compA <= iowrite;
+        end case; 
       end if;
-      reg_count <= std_logic_vector(unsigned(reg_count)+1 );
-    end if;
+
+      -- if to_integer(unsigned(reg_count)) >= OCR1A then
+        --OC1A <= '0';
+        --OC1Abar <= '1';
+      --else
+        --OC1A <= '1';
+        --OC1Abar <= '0';
+      --end if;
+      --reg_count <= std_logic_vector(unsigned(reg_count)+1 );
+    --end if;
   end process clock_tick;
   
+  interpretation_registreA : process(reg_ctrlA)
+  begin
+    
+  end process interpretation_registreA;
+
   comparateur : process(reg_compA)
   begin
     case reg_compA is
