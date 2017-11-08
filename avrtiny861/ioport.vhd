@@ -1,67 +1,113 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date:    11:38:52 08/26/2014 
--- Design Name: 
--- Module Name:    ioport - ioport_architecture 
--- Project Name: 
--- Target Devices: 
--- Tool versions: 
--- Description: 
---
--- Dependencies: 
---
--- Revision: 
--- Revision 0.01 - File Created
--- Additional Comments: 
---
-----------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_ARITH.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
----- Uncomment the following library declaration if instantiating
----- any Xilinx primitives in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
 
 entity ioport is
-	 Generic (BASE_ADDR	: integer := 16#1B#);
+	 Generic (BASE_ADDR	: integer := 16#19#);
     Port ( clk : in  STD_LOGIC;
+	       Rst : in  STD_LOGIC;
            addr : in  STD_LOGIC_VECTOR (5 downto 0);
            ioread : out  STD_LOGIC_VECTOR (7 downto 0);
            iowrite : in  STD_LOGIC_VECTOR (7 downto 0);
            rd : in  STD_LOGIC;
            wr : in  STD_LOGIC;
-			  inport : in  STD_LOGIC_VECTOR (7 downto 0);
-           outport :	out  STD_LOGIC_VECTOR (7 downto 0));
+		   ioport : inout  STD_LOGIC_VECTOR (7 downto 0));
 end ioport;
 
 architecture ioport_architecture of ioport is
 
+constant PORT_ADDR : integer := BASE_ADDR + 2;
+constant DDR_ADDR : integer := BASE_ADDR + 1;
+constant PIN_ADDR : integer := BASE_ADDR;
+
+-- Register.
+signal PORT_register: 						STD_LOGIC_VECTOR(7 downto 0)				:= (others => 'Z');
+signal DDR_register : 						STD_LOGIC_VECTOR(7 downto 0)				:= (others => 'Z');
+signal PIN_register : 						STD_LOGIC_VECTOR(7 downto 0)				:= (others => 'Z');
+
 begin
 
-	im : process (clk)
+im : process (clk, Rst)
 		variable a_int : natural;
 		variable rdwr : std_logic_vector(1 downto 0);
 	begin
-		if (clk'event and clk='1') then
+		if (Rst = '1') then
+			PORT_register	<= (others => 'Z');
+			DDR_register 	<= (others => 'Z');
+			PIN_register	<= (others => 'Z');
+		elsif (rising_edge(clk)) then
 			a_int := CONV_INTEGER(addr);
-			if (a_int = BASE_ADDR) then
-			  rdwr := rd & wr;
-			  ioread <= (others => '0');
+			rdwr  := rd & wr;
+			if (a_int = PORT_ADDR) then
 			  case rdwr is
 				 when "10" => -- rd
-					ioread <= inport;
+					ioread		<= ioport;
 				 when "01" => -- wr
-					outport <= iowrite;
+					if DDR_register(0) = '1' then
+						ioport(0) <= 'Z';
+					else
+						ioport(0) <= iowrite(0);
+					end if;
+					if DDR_register(1) = '1' then
+						ioport(1) <= 'Z';
+					else
+						ioport(1) <= iowrite(1);
+					end if;
+					if DDR_register(2) = '1' then
+						ioport(2) <= 'Z';
+					else
+						ioport(2) <= iowrite(2);
+					end if;
+					if DDR_register(3) = '1' then
+						ioport(3) <= 'Z';
+					else
+						ioport(3) <= iowrite(3);
+					end if;
+					if DDR_register(4) = '1' then
+						ioport(4) <= 'Z';
+					else
+						ioport(4) <= iowrite(4);
+					end if;
+					if DDR_register(5) = '1' then
+						ioport(5) <= 'Z';
+					else
+						ioport(5) <= iowrite(5);
+					end if;
+					if DDR_register(6) = '1' then
+						ioport(6) <= 'Z';
+					else
+						ioport(6) <= iowrite(6);
+					end if;
+					if DDR_register(7) = '1' then
+						ioport(7) <= 'Z';
+					else
+						ioport(7) <= iowrite(7);
+					end if;
 				 when others => NULL; 
 			  end case;
+			elsif (a_int = DDR_ADDR) then
+				case rdwr is
+					when "10" => -- rd
+						ioread			<= DDR_register;
+					when "01" => -- wr
+						DDR_register 	<= iowrite;
+					when others => NULL; 
+				end case;
+			elsif (a_int = PIN_ADDR) then
+				case rdwr is
+					when "10" => -- rd
+						ioread 			<= PIN_register;
+					when "01" => -- wr
+					when others => NULL; 
+				end case;
 			end if;
 		end if;
-	end process im;	
+end process im;	
+
+	-- read all time the PORT PIN
+	PIN_register <= ioport;
 
 end ioport_architecture;
 
