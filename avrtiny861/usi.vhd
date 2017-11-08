@@ -1,7 +1,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
-use IEEE.STD_LOGIC_ARITH.ALL;
 
 entity usi is
 	 Generic (BASE_ADDR	: integer := 16#0D#);
@@ -77,6 +76,8 @@ signal SPI_TX_SCK:  						std_logic := '0';
 signal SPI_RX_SCK:  						std_logic := '0';
 signal SPI_TX_CS:  							std_logic := '0';
 signal SPI_RX_CS:  							std_logic := '0';
+
+signal RX_out: 								STD_LOGIC_VECTOR (7 downto 0);		-- data transmitted
 	
 begin
 
@@ -85,7 +86,7 @@ begin
    Generic map (
 		  clkdiv	=> clkdiv )
    PORT MAP (
-		  clk		=> control_clock,
+		  clk		=> clk,
           rst 		=> rst,
           tc0		=> tc0,
           tc1 		=> tc1,
@@ -102,7 +103,7 @@ begin
 			clk 		=> divided_clock,
 			SPI_SCK 	=> SPI_RX_SCK,
 			SPI_CS 		=> SPI_RX_CS,
-			data_out 	=> reg_usidr
+			data_out 	=> RX_out
 			);
 
 	Transmitter: SPI_TX
@@ -119,12 +120,12 @@ begin
 		  
 		  
 -- Modify the state machine
-clock_tick: process(control_clock)
+clock_tick: process(clk, SPI_RX_CS)
 	variable a_int : 	natural;
 	variable rdwr : 	std_logic_vector(1 downto 0);
 	variable CS_TXRX : 	std_logic_vector (1 downto 0);
 begin
-	if (rising_edge(control_clock)) then		
+	if (rising_edge(clk)) then		
 		a_int 		:= to_integer(unsigned(addr));
 		rdwr 		:= rd & wr;
 		CS_TXRX		:= SPI_TX_CS & SPI_RX_CS;
@@ -140,7 +141,7 @@ begin
 			 when "01" => -- wr
 				reg_usidr <= iowrite;
 				if (CS_TXRX = "11") then
-					SPI_RX_start 	<= '1';
+					SPI_TX_start 	<= '1';
 				end if;
 			 when others => NULL; 
 		  end case;

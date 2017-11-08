@@ -19,7 +19,7 @@ type T_state is (idle, bitsdata);
 signal current_state, next_state : T_state;
 
 -- Number of bits send counters.
-signal spicounter, spicounter_next : unsigned(N-1 downto 0);
+signal spicounter, spicounter_next : STD_LOGIC_VECTOR(N-1 downto 0);
 
 -- data_in buffer that can be modified at will. 
 signal data_buffer : 		STD_LOGIC_VECTOR (N-1 downto 0)		:= (others => '0');
@@ -57,7 +57,7 @@ begin
 		when idle =>
 			-- When idle the system send a null bit and reset the counter to 0.
 			spicounter_next 	<= (others => '0');
-			data_out 			<= '0';
+			-- data_out 			<= '0';
 			data_buffer			<= data_in;
 			-- Change the next state if the start of a transmission is on '1'
 			if spi_start = '1' then
@@ -66,12 +66,12 @@ begin
 			
 		when bitsdata =>
 			-- Add one to the counter
-			spicounter_next	 	<= spicounter + 1;
-			if spicounter_next < N then
+			spicounter_next	 	<= std_logic_vector(unsigned(spicounter) + 1);
+			if to_integer(unsigned(spicounter)) < N then
 				-- If the number of bits send is lower than the number bits to send the state machine stay in sending mode
 				next_state	 	<= bitsdata;
 				-- send the next bit
-				data_out	 	<= data_buffer(N-1);
+				-- data_out	 	<= data_buffer(N-1);
 				-- update the list of bit to send
 				data_buffer		<= data_buffer(N-2 downto 0) & '0'; 
 			else
@@ -84,5 +84,7 @@ end process change_state;
 
 -- Circuit select 
 SPI_CS 			<= '1' when current_state = idle else '0';
+
+data_out	 	<= data_buffer(N-1);
 
 end Behavioral;
