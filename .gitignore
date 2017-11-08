@@ -1,4 +1,10 @@
 *.o
 *.vcd
 *.cf
-rs232_tb
+*.back
+arvtiny861/microcontroleur_test
+build/pm.elf
+build/pm.hex
+c/porta/porta.d
+c/porta/porta.lss
+c/porta/porta.map
