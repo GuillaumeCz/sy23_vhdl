@@ -20,7 +20,7 @@ architecture timer_architecture of timer is
 component diviseur_timer is
     Port ( clk 		: in  STD_LOGIC;
            rst 		: in  STD_LOGIC;
-		   N 		: in STD_LOGIC_VECTOR(3 downto 0);
+		   N 		: in STD_LOGIC_VECTOR(1 downto 0);
            clk_out 	: out  STD_LOGIC);
 end component;
 
@@ -48,11 +48,12 @@ signal PWM1B	 		: STD_LOGIC;
 
 signal PWM1X	 		: STD_LOGIC;
 signal PSR1		 		: STD_LOGIC;
-signal DTPS	 	 		: STD_LOGIC_VECTOR (3 downto 0);
+signal DTPS	 	 		: STD_LOGIC_VECTOR (1 downto 0) := "00";
 signal CS		 		: STD_LOGIC_VECTOR (3 downto 0);
 signal N 				: STD_LOGIC_VECTOR (7 downto 0);
 
 signal OC1A_buffer 		: STD_LOGIC := '1';
+signal OC1Abar_buffer 		: STD_LOGIC := '0';
 
 signal Rst_predivisor 	: STD_LOGIC := '0';
 signal predivisor_out 	: STD_LOGIC := '0';
@@ -74,7 +75,7 @@ begin
 			N 	=> N
 			);
 			
-clock_tick: process(predivisor_out, rst)
+clock_tick: process(clk, predivisor_out, rst)
 variable a_int : natural;
 variable rdwr : std_logic_vector(1 downto 0);
 begin
@@ -86,6 +87,7 @@ begin
 		else 
 			reg_count <= (others => '0');
 		end if;
+  elsif rising_edge(clk) then
 		
 		a_int := to_integer(unsigned(addr));
 		rdwr  := rd & wr;
@@ -119,7 +121,7 @@ begin
 					ioread 			<= reg_ctrlA;
 				when "01" => -- wr
 					reg_ctrlA		<= iowrite;
-				when others => NULL; 
+				when others => Null;
 			end case;
 		end if;
 	end if;
@@ -131,24 +133,28 @@ begin
 		case COM1A is
 			when "00" =>
 				OC1A_buffer			<= 'Z';
+				OC1Abar_buffer			<= 'Z';
 			when "01" =>
 				if reg_count = "00000000" then
 					OC1A_buffer 	<= '1';
 				elsif reg_compA < reg_count then
 					OC1A_buffer		<= '0';
 				end if;
+				OC1Abar_buffer 	<= not OC1A_buffer;
 			when "10" => -- wr
 				if reg_count = "00000000" then
 					OC1A_buffer 	<= '1';
 				elsif reg_compA < reg_count then
 					OC1A_buffer		<= '0';
 				end if;
+			  OC1Abar_buffer 	<= 'Z';
 			when "11" => 
 				if reg_count = "00000001" then
 					OC1A_buffer 	<= '1';
 				elsif reg_compA < reg_count then
 					OC1A_buffer		<= '1';
 				end if;
+				OC1Abar_buffer 	<= not OC1A_buffer;
 			when others => NULL;
 		end case;
 	end if;
@@ -160,14 +166,14 @@ PWM1A	<= reg_ctrlA(1);
 
 PWM1X	<= reg_ctrlB(7);
 PSR1	<= reg_ctrlB(6);
-DTPS 	<= "00" & reg_ctrlB(5 downto 4);
+DTPS 	<= reg_ctrlB(5 downto 4);
 CS		<= reg_ctrlB(3 downto 0);
 
 
 Rst_predivisor <= PSR1;
   
 OC1A	<= not OC1A_buffer 	when PWM1X = '1' else OC1A_buffer;
-OC1Abar <= OC1A_buffer  	when PWM1X = '1' else OC1A_buffer;
+OC1Abar <= OC1Abar_buffer  	when PWM1X = '1' else not OC1Abar_buffer;
 
 end timer_architecture;
 

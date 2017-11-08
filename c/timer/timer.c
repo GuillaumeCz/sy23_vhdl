@@ -23,9 +23,9 @@
 
 int main(void) {
 	
-	OCR1A = 0x80;
-	TCCR1B = 0x12; 
-	TCCR1A = 0x42; 
+	OCR1A = 0x1F;
+	TCCR1B = 0x1F; 
+	TCCR1A = 0x82; 
 		
 	while (1) {	}
 	return 0;

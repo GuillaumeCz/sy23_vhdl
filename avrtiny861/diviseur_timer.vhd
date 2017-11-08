@@ -5,25 +5,15 @@ use IEEE.numeric_std.all;
 entity diviseur_timer is
     Port ( clk : in  STD_LOGIC;
            rst : in  STD_LOGIC;
-		   N : in STD_LOGIC_VECTOR(3 downto 0);
+		   N : in STD_LOGIC_VECTOR(1 downto 0);
            clk_out : out  STD_LOGIC);
 end diviseur_timer;
 
 architecture architecture_diviseur_timer of diviseur_timer is
 
--- calcul du nombre de bits en fonction de la valeur maximale
-function intlog2 (x : natural) return natural is
- variable temp : natural := x ;
- variable n : natural := 0 ;
- begin
-    while temp > 1 loop
-        temp := temp / 2 ;
-        n := n + 1 ;
-    end loop ;
-    return n ;
-end function intlog2 ;
-
-signal cpt : unsigned(7 downto 0);
+signal divided_clk : std_logic := '0';
+signal cpt : std_logic_vector(2 downto 0) := "000";
+signal max_cpt : std_logic_vector(2 downto 0) := "000";
 
 begin
 
@@ -32,22 +22,23 @@ begin
    if rising_edge(clk) then 
 	 if rst = '1' then
 	    cpt <= (others => '0');
-    elsif cpt < unsigned(N)-1 then
-	    cpt <= cpt + 1;
+    elsif cpt < max_cpt then
+	    cpt <= std_logic_vector(unsigned(cpt) + 1);
 	 else	
         cpt <= (others => '0');
+        divided_clk <= not(divided_clk);
 	 end if;
 	end if;
   end process comptage;
+
+  clk_out <= divided_clk;
   
-  retenue: process(cpt)
-	begin	
-		if cpt >= 0 and cpt <= (unsigned(N)-1)/2 then -- clk0  = clk/N
-		   clk_out <= '1';
-		else
-		  clk_out <= '0';
-      end if;		
-	end process retenue; 
+  with N select
+  max_cpt <= "000" when "00",
+	   "000" when "01",
+     "011" when "10",
+     "111" when "11",
+     "111" when others;
 	
 end architecture_diviseur_timer;
 
