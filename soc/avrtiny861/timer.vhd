@@ -18,40 +18,45 @@ end timer;
 architecture timer_architecture of timer is
 
 component diviseur_timer is
-    Port ( clk : in  STD_LOGIC;
-           rst : in  STD_LOGIC;
-		   N : in STD_LOGIC_VECTOR(3 downto 0);
-           clk_out : out  STD_LOGIC);
+    Port ( clk 		: in  STD_LOGIC;
+           rst 		: in  STD_LOGIC;
+		   N 		: in STD_LOGIC_VECTOR(3 downto 0);
+           clk_out 	: out  STD_LOGIC);
 end component;
 
-constant OCR1A : integer := BASE_ADDR ;
-constant TCNT1 : integer := BASE_ADDR + 1;
-constant TCCR1B : integer := BASE_ADDR + 2;
-constant TCCR1A : integer := BASE_ADDR + 3;
+component timer_multiplixer is
+    Port ( CS : in  STD_LOGIC_VECTOR (3 downto 0);
+           N : out  STD_LOGIC_VECTOR (7 downto 0));
+end component;
 
-signal reg_compA : STD_LOGIC_VECTOR (7 downto 0);
-signal reg_count : STD_LOGIC_VECTOR (7 downto 0);
-signal reg_ctrlA : STD_LOGIC_VECTOR (7 downto 0);
-signal reg_ctrlB : STD_LOGIC_VECTOR (7 downto 0);
+constant OCR1A 	 		: integer := BASE_ADDR ;
+constant TCNT1 	 		: integer := BASE_ADDR + 1;
+constant TCCR1B  		: integer := BASE_ADDR + 2;
+constant TCCR1A  		: integer := BASE_ADDR + 3;
 
-signal COM1A	 : STD_LOGIC_VECTOR (1 downto 0);
-signal COM1B	 : STD_LOGIC_VECTOR (1 downto 0);
-signal FOC1A	 : STD_LOGIC;
-signal FOC1B	 : STD_LOGIC;
-signal PWM1A	 : STD_LOGIC;
-signal PWM1B	 : STD_LOGIC;
+signal reg_compA 		: STD_LOGIC_VECTOR (7 downto 0);
+signal reg_count 		: STD_LOGIC_VECTOR (7 downto 0);
+signal reg_ctrlA 		: STD_LOGIC_VECTOR (7 downto 0);
+signal reg_ctrlB 		: STD_LOGIC_VECTOR (7 downto 0);
 
-signal PWM1X	 : STD_LOGIC;
-signal PSR1		 : STD_LOGIC;
-signal DTPS	 	 : STD_LOGIC_VECTOR (3 downto 0);
-signal CS		 : STD_LOGIC_VECTOR (3 downto 0);
+signal COM1A	 		: STD_LOGIC_VECTOR (1 downto 0);
+signal COM1B	 		: STD_LOGIC_VECTOR (1 downto 0);
+signal FOC1A	 		: STD_LOGIC;
+signal FOC1B	 		: STD_LOGIC;
+signal PWM1A	 		: STD_LOGIC;
+signal PWM1B	 		: STD_LOGIC;
 
+signal PWM1X	 		: STD_LOGIC;
+signal PSR1		 		: STD_LOGIC;
+signal DTPS	 	 		: STD_LOGIC_VECTOR (3 downto 0);
+signal CS		 		: STD_LOGIC_VECTOR (3 downto 0);
+signal N 				: STD_LOGIC_VECTOR (7 downto 0);
 
-signal OC1A_buffer : 		STD_LOGIC := '1';
+signal OC1A_buffer 		: STD_LOGIC := '1';
 
-signal Rst_predivisor : 	STD_LOGIC := '0';
-signal predivisor_out : 	STD_LOGIC := '0';
-signal divisor_out : 		STD_LOGIC := '0';
+signal Rst_predivisor 	: STD_LOGIC := '0';
+signal predivisor_out 	: STD_LOGIC := '0';
+
 
 begin
 
@@ -63,22 +68,20 @@ begin
 			clk_out	=> predivisor_out
 			);
 			
-	divisor: diviseur_timer
+	CS_converter: timer_multiplixer
     Port map(
-			clk 	=> predivisor_out,
-			rst 	=> Rst,
-			N 		=> CS,
-			clk_out	=> divisor_out
+			CS 	=> CS,
+			N 	=> N
 			);
 			
-clock_tick: process(divisor_out, rst)
+clock_tick: process(predivisor_out, rst)
 variable a_int : natural;
 variable rdwr : std_logic_vector(1 downto 0);
 begin
 	if Rst = '1' then
 	  reg_count <= (others => '0');
-	elsif rising_edge(divisor_out) then
-		if reg_count < "11111111" and PWM1A = '1' then
+	elsif rising_edge(predivisor_out) then
+		if reg_count < N and PWM1A = '1' then
 			reg_count <= std_logic_vector(unsigned(reg_count) + 1);
 		else 
 			reg_count <= (others => '0');
@@ -99,6 +102,7 @@ begin
 				when "10" => -- rd
 					ioread			<= reg_count;
 				when "01" => -- wr
+					reg_count		<= iowrite;
 				when others => NULL; 
 			end case;
 		elsif (a_int = TCCR1B) then
