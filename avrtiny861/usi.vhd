@@ -26,16 +26,6 @@ signal reg_usidr : STD_LOGIC_VECTOR (7 downto 0);
 signal reg_usisr : STD_LOGIC_VECTOR (7 downto 0);
 signal reg_usicr : STD_LOGIC_VECTOR (7 downto 0);
 
--- Component
-component diviseur_generique
-	Generic(clkdiv : integer := 2);
-    Port ( clk : in  STD_LOGIC;
-           rst : in  STD_LOGIC;
-           tc0 : out  STD_LOGIC;
-           tc1 : out  STD_LOGIC;
-           clk_out : out  STD_LOGIC);
-end component;
-
 component SPI_RX
 	Generic (N : integer := 8);
     Port ( SPI_MISO : 	in  STD_LOGIC;								-- data received
@@ -52,7 +42,8 @@ component SPI_TX
     Port ( data_in : 	in  STD_LOGIC_VECTOR (N-1 downto 0);		-- data transmitted
            spi_start : 	in  STD_LOGIC;								-- transmission start pulse
            rst : 		in  STD_LOGIC;								-- reset
-           SPI_SCK : 	in  STD_LOGIC;								-- clock
+		   clk :		in	STD_LOGIC;								-- system clock
+           SPI_SCK : 	out  STD_LOGIC;								-- spi clock
            SPI_CS : 	out  STD_LOGIC;								-- select circuit
            SPI_MOSI : 	out  STD_LOGIC);							-- data transmitted
 end component;
@@ -64,10 +55,8 @@ constant sysclk : real := 50.0e6 ; -- 50MHz
 constant clkdiv : integer := integer(sysclk / real(bauds));
 
 -- clock
-signal divided_clock : 						STD_LOGIC							:= '0';
 signal control_clock :						STD_LOGIC							:= '0';
 signal activate_clock:						STD_LOGIC							:= '0';
-signal tc0, tc1 :							STD_LOGIC							:= '0';
 
 
 signal SPI_TX_start:  						std_logic := '0';
@@ -78,21 +67,10 @@ signal SPI_TX_CS:  							std_logic := '0';
 signal SPI_RX_CS:  							std_logic := '0';
 
 signal RX_out: 								STD_LOGIC_VECTOR (7 downto 0);		-- data transmitted
+
+signal bIOwriteactive : 					std_logic := '0';
 	
 begin
-
-	-- Clock divider
-   clk_divider: diviseur_generique 
-   Generic map (
-		  clkdiv	=> clkdiv )
-   PORT MAP (
-		  clk		=> clk,
-          rst 		=> rst,
-          tc0		=> tc0,
-          tc1 		=> tc1,
-		  clk_out  	=> divided_clock
-		  );
-		  
 	Receiver: SPI_RX
 	Generic map (
 			N => 8 )
@@ -100,7 +78,7 @@ begin
 			SPI_MISO 	=> MISO,
 			spi_start 	=> SPI_RX_start,
 			rst 		=> rst,
-			clk 		=> divided_clock,
+			clk 		=> control_clock,
 			SPI_SCK 	=> SPI_RX_SCK,
 			SPI_CS 		=> SPI_RX_CS,
 			data_out 	=> RX_out
@@ -113,6 +91,7 @@ begin
 			data_in 	=> reg_usidr,
 			spi_start 	=> SPI_TX_start,
 			rst 		=> rst,
+			clk 		=> control_clock,
 			SPI_SCK 	=> SPI_TX_SCK,
 			SPI_CS 		=> SPI_TX_CS,
 			SPI_MOSI 	=> MOSI
@@ -134,12 +113,13 @@ begin
 		if (a_int = USIDR) then
 		  case rdwr is
 			 when "10" => -- rd
+				bIOwriteactive <= '0';
 				ioread <= reg_usidr;
 				if (CS_TXRX = "11") then
 					SPI_RX_start 	<= '1';
 				end if;
 			 when "01" => -- wr
-				reg_usidr <= iowrite;
+				bIOwriteactive <= '1';
 				if (CS_TXRX = "11") then
 					SPI_TX_start 	<= '1';
 				end if;
@@ -148,6 +128,7 @@ begin
 		elsif (a_int = USISR) then
 			case rdwr is
 				when "10" => -- rd
+					bIOwriteactive <= '0';
 					ioread 	<= reg_usisr;
 				when "01" => NULL;-- wr
 				when others => NULL; 
@@ -156,12 +137,16 @@ begin
 			case rdwr is
 				when "10" => NULL; -- rd
 				when "01" => -- wr
+					bIOwriteactive <= '0';
 					reg_usicr	<= iowrite;
 				when others => NULL; 
 			end case;
 		end if;
 	end if;
 end process clock_tick;
+
+reg_usidr <= iowrite	when bIOwriteactive = '1' else
+			 RX_out;
 
 
 -- SPI Clock

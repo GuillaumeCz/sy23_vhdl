@@ -14,7 +14,8 @@ ARCHITECTURE behavior OF SPI_TX_tb IS
     Port ( data_in : 	in  STD_LOGIC_VECTOR (N-1 downto 0);		-- data received from memory
            spi_start : 	in  STD_LOGIC;								-- transmission start pulse
            rst : 		in  STD_LOGIC;								-- reset
-           SPI_SCK : 	in  STD_LOGIC;								-- clock
+		   clk :		in	STD_LOGIC;								-- system clock
+           SPI_SCK : 	out  STD_LOGIC;								-- clock
            SPI_CS : 	out  STD_LOGIC;								-- select circuit
            SPI_MOSI : 	out  STD_LOGIC								-- data received on N bits
 		   );
@@ -32,6 +33,7 @@ ARCHITECTURE behavior OF SPI_TX_tb IS
  	--Outputs
    signal TX 		: std_logic;
    signal SPI_CS	: std_logic;
+   signal SPI_SCK	: std_logic;
 
    -- Clock period definitions
    constant clk_period : 		time := 10 ns;
@@ -47,7 +49,8 @@ BEGIN
 		  data_in	=> data,
           spi_start	=> spi_start,
           rst 		=> rst,
-          SPI_SCK	=> clk,
+		  clk		=> clk,
+          SPI_SCK	=> SPI_SCK,
           SPI_CS 	=> SPI_CS,
 		  SPI_MOSI  => TX
         );

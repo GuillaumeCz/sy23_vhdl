@@ -83,24 +83,56 @@ BEGIN
       wait for 100 ns;
 		rst <= '0';
 		wr <= '1';
-	  wait for clk_period*1;
-	  addr 		<= "001111";  -- 0x0F
-	  iowrite 	<= "11111111";
-	  wait for clk_period*1;
+		
 
 	  
+	  -- wait for clk_period*1;
+	  -- addr 		<= "001110";	-- 0x0E
+	  -- iowrite 	<= "11111111";
+	  -- wait for clk_period*1;
+	  
+
+
 	  wait for clk_period*1;
-	  addr 		<= "001110";	-- 0x0E
-	  iowrite 	<= "11111111";
+	  addr 		<= "001111";  -- 0x0F
+	  iowrite 	<= "11010011";
 	  wait for clk_period*1;
+	  
 	  
 	  wait for clk_period*1;
 	  addr 		<= "001101";	-- 0x0D
-	  iowrite 	<= "11111111";
+	  iowrite 	<= "00110101";
 	  wait for clk_period*1;
-	  wr 		<= '1';
+	  
+	  
+	  wait for clk_period*clkdiv*20;
+	  wr 		<= '0';
+	  wait for clk_period*clkdiv*20;
+	  
 	  wait for clk_period*1;
-
+	  addr 		<= "001101";	-- 0x0D
+	  wait for clk_period*1;
+	  rd 		<= '1';	  
+	  wait for clk_period*1;
+	  MISO <= '0';
+	  wait for clk_period*clkdiv;
+	  MISO <= '0';
+	  wait for clk_period*clkdiv;
+	  MISO <= '1';
+	  wait for clk_period*clkdiv;
+	  MISO <= '1';
+	  wait for clk_period*clkdiv;
+	  MISO <= '0';
+	  wait for clk_period*clkdiv;
+	  MISO <= '1';
+	  wait for clk_period*clkdiv;
+	  MISO <= '0';
+	  wait for clk_period*clkdiv;
+	  MISO <= '1';
+	  
+	  wait for clk_period*1;
+		rd 		<= '0';
+	  
 	  
       wait;
    end process;

@@ -28,7 +28,6 @@ architecture Behavioral of SPI_RX is
 constant bauds : integer := 115200;
 constant sysclk : real := 50.0e6 ; -- 50MHz
 constant clkdiv : integer := integer(sysclk / real(bauds));
---constant DIVTX : std_logic_vector(15 downto 0) := std_logic_vector(to_unsigned(N,16));
 	
 --state_next machine
 type T_state is (idle, bitsdata);
