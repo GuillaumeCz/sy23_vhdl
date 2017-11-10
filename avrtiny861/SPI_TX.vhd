@@ -34,18 +34,17 @@ type T_state is (idle, bitsdata);
 signal current_state, next_state : T_state;
 
 -- Number of bits send counters.
-signal spicounter, spicounter_next : STD_LOGIC_VECTOR(N-1 downto 0);
+signal spicounter, spicounter_next :	STD_LOGIC_VECTOR(N-1 downto 0)		:= (others => '0');
 
 -- data_in buffer that can be modified at will. 
-signal data_buffer : 		STD_LOGIC_VECTOR (N-1 downto 0)		:= (others => '0');
+signal data_buffer : 					STD_LOGIC_VECTOR (N-1 downto 0)		:= (others => '0');
 
 -- Bit that will be send on the SPI_MOSI pin.
-signal data_out	:			STD_LOGIC							:=	'0';
+signal data_out	:						STD_LOGIC							:=	'0';
 
 -- clock
-signal divided_clock : 						STD_LOGIC							:= '0';
-signal tc0, tc1 :							STD_LOGIC							:= '0';
-
+signal divided_clock :					STD_LOGIC							:= '0';
+signal tc0, tc1 :						STD_LOGIC							:= '0';
 begin
 
 -- Clock divider
@@ -89,9 +88,10 @@ begin
 			-- When idle the system send a null bit and reset the counter to 0.
 			spicounter_next 	<= (others => '0');
 			-- data_out 			<= '0';
-			data_buffer			<= data_in;
+			
 			-- Change the next state if the start of a transmission is on '1'
 			if spi_start = '1' then
+				data_buffer		<= data_in;
 				next_state	 	<= bitsdata;
 			end if;
 			

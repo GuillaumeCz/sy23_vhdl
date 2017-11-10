@@ -79,9 +79,9 @@ BEGIN
    stim_proc: process
    begin		
       -- hold reset state for 100 ns.
-		rst <= '1';
-      wait for 100 ns;
-		rst <= '0';
+		-- rst <= '1';
+      -- wait for 100 ns;
+		-- rst <= '0';
 		wr <= '1';
 		
 
@@ -130,7 +130,7 @@ BEGIN
 	  wait for clk_period*clkdiv;
 	  MISO <= '1';
 	  
-	  wait for clk_period*1;
+	  wait for clk_period*clkdiv;
 		rd 		<= '0';
 	  
 	  

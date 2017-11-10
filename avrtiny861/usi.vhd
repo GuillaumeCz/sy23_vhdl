@@ -67,8 +67,6 @@ signal SPI_TX_CS:  							std_logic := '0';
 signal SPI_RX_CS:  							std_logic := '0';
 
 signal RX_out: 								STD_LOGIC_VECTOR (7 downto 0);		-- data transmitted
-
-signal bIOwriteactive : 					std_logic := '0';
 	
 begin
 	Receiver: SPI_RX
@@ -113,13 +111,11 @@ begin
 		if (a_int = USIDR) then
 		  case rdwr is
 			 when "10" => -- rd
-				bIOwriteactive <= '0';
 				ioread <= reg_usidr;
 				if (CS_TXRX = "11") then
 					SPI_RX_start 	<= '1';
 				end if;
 			 when "01" => -- wr
-				bIOwriteactive <= '1';
 				if (CS_TXRX = "11") then
 					SPI_TX_start 	<= '1';
 				end if;
@@ -128,7 +124,6 @@ begin
 		elsif (a_int = USISR) then
 			case rdwr is
 				when "10" => -- rd
-					bIOwriteactive <= '0';
 					ioread 	<= reg_usisr;
 				when "01" => NULL;-- wr
 				when others => NULL; 
@@ -137,7 +132,6 @@ begin
 			case rdwr is
 				when "10" => NULL; -- rd
 				when "01" => -- wr
-					bIOwriteactive <= '0';
 					reg_usicr	<= iowrite;
 				when others => NULL; 
 			end case;
@@ -145,10 +139,12 @@ begin
 	end if;
 end process clock_tick;
 
-reg_usidr <= iowrite	when bIOwriteactive = '1' else
-			 RX_out;
+-- reg_usidr <= RX_out	when bIOwriteactive = '1' else
+			 -- iowrite;
 
-
+reg_usidr <= RX_out		when rd ='1' and to_integer(unsigned(addr)) = USIDR else
+			 iowrite	when wr ='1' and to_integer(unsigned(addr)) = USIDR ;
+			 
 -- SPI Clock
 SCK			<= SPI_TX_SCK when SPI_TX_CS = '0' and SPI_RX_CS = '1' else
 			   SPI_RX_SCK when SPI_TX_CS = '1' and SPI_RX_CS = '0' else 
