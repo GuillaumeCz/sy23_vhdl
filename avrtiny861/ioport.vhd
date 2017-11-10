@@ -43,48 +43,49 @@ im : process (clk, Rst)
 			if (a_int = PORT_ADDR) then
 			  case rdwr is
 				 when "10" => -- rd
-					ioread		<= ioport;
+					ioread		<= PORT_register;
 				 when "01" => -- wr
-					if DDR_register(0) = '1' then
-						ioport(0) <= 'Z';
+					if DDR_register(0) = '0' then
+						PORT_register(0) <= 'Z';
 					else
-						ioport(0) <= iowrite(0);
+						PORT_register(0) <= iowrite(0);
 					end if;
-					if DDR_register(1) = '1' then
-						ioport(1) <= 'Z';
+					if DDR_register(1) = '0' then
+						PORT_register(1) <= 'Z';
 					else
-						ioport(1) <= iowrite(1);
+						PORT_register(1) <= iowrite(1);
 					end if;
-					if DDR_register(2) = '1' then
-						ioport(2) <= 'Z';
+					if DDR_register(2) = '0' then
+						PORT_register(2) <= 'Z';
 					else
-						ioport(2) <= iowrite(2);
+						PORT_register(2) <= iowrite(2);
 					end if;
-					if DDR_register(3) = '1' then
-						ioport(3) <= 'Z';
+					if DDR_register(3) = '0' then
+						PORT_register(3) <= 'Z';
 					else
-						ioport(3) <= iowrite(3);
+						PORT_register(3) <= iowrite(3);
 					end if;
-					if DDR_register(4) = '1' then
-						ioport(4) <= 'Z';
+					if DDR_register(4) = '0' then
+						PORT_register(4) <= 'Z';
 					else
-						ioport(4) <= iowrite(4);
+						PORT_register(4) <= iowrite(4);
 					end if;
-					if DDR_register(5) = '1' then
-						ioport(5) <= 'Z';
+					if DDR_register(5) = '0' then
+						PORT_register(5) <= 'Z';
 					else
-						ioport(5) <= iowrite(5);
+						PORT_register(5) <= iowrite(5);
 					end if;
-					if DDR_register(6) = '1' then
-						ioport(6) <= 'Z';
+					if DDR_register(6) = '0' then
+						PORT_register(6) <= 'Z';
 					else
-						ioport(6) <= iowrite(6);
+						PORT_register(6) <= iowrite(6);
 					end if;
-					if DDR_register(7) = '1' then
-						ioport(7) <= 'Z';
+					if DDR_register(7) = '0' then
+						PORT_register(7) <= 'Z';
 					else
-						ioport(7) <= iowrite(7);
+						PORT_register(7) <= iowrite(7);
 					end if;
+          ioport <= PORT_register;
 				 when others => NULL; 
 			  end case;
 			elsif (a_int = DDR_ADDR) then
