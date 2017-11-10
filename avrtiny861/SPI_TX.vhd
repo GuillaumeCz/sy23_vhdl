@@ -96,7 +96,7 @@ begin
 			end if;
 			
 		when bitsdata =>
-			if rising_edge(divided_clock) then							-- Synchronize the reception of data on the SPI clock 
+			if divided_clock = '1' then							-- Synchronize the reception of data on the SPI clock 
 				-- Add one to the counter
 				spicounter_next	 	<= std_logic_vector(unsigned(spicounter) + 1);
 				data_buffer			<= data_buffer(N-2 downto 0) & '0'; 

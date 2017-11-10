@@ -85,7 +85,7 @@ begin
 			spicounter_next 			<= (others => '0');
 			
 		when bitsdata =>
-			if falling_edge(divided_clock) then							-- Synchronize the reception of data on the SPI clock 
+			if divided_clock = '0' then							-- Synchronize the reception of data on the SPI clock 
 				data_next 				<= data(6 downto 0) & SPI_MISO; -- Add on the LSB the received bit.
 				spicounter_next			<= spicounter + 1;				-- Add one to the counter of bit received
 			end if;

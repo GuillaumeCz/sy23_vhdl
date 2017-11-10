@@ -81,7 +81,7 @@ variable rdwr : std_logic_vector(1 downto 0);
 begin
 	if Rst = '1' then
 	  reg_count <= (others => '0');
-	elsif rising_edge(predivisor_out) then
+	elsif predivisor_out = '1' then
 		if reg_count < N and PWM1A = '1' then
 			reg_count <= std_logic_vector(unsigned(reg_count) + 1);
 		else 
@@ -129,7 +129,7 @@ end process clock_tick;
 
 pp : process(reg_count, FOC1A)
 begin 
-	if FOC1A = '1' or reg_count'event then
+	-- if FOC1A = '1' or reg_count'event then
 		case COM1A is
 			when "00" =>
 				OC1A_buffer			<= 'Z';
@@ -157,7 +157,7 @@ begin
 				OC1Abar_buffer 	<= not OC1A_buffer;
 			when others => NULL;
 		end case;
-	end if;
+	-- end if;
 end process pp;
   
 COM1A 	<= reg_ctrlA(7 downto 6);
