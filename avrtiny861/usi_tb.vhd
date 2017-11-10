@@ -9,7 +9,7 @@ ARCHITECTURE behavior OF usi_tb IS
  
     -- Component Declaration for the Unit Under Test (UUT)
  
-    COMPONENT usi
+COMPONENT usi
 	Generic (BASE_ADDR	: integer := 16#0D#);
     Port ( clk : in  STD_LOGIC;
            Rst : in  STD_LOGIC;
@@ -21,31 +21,31 @@ ARCHITECTURE behavior OF usi_tb IS
            SCK : out  STD_LOGIC;
            MOSI : out  STD_LOGIC;
            MISO : in  STD_LOGIC);
-    END COMPONENT;
+END COMPONENT;
     
-   --Constant
-	constant N 		: integer := 8;
-	constant bauds 	: integer := 115200;
-	constant sysclk : real := 50.0e6 ; -- 50MHz
-	constant clkdiv : integer := integer(sysclk / real(bauds));
-   
-   --Inputs
-   signal clk 		: std_logic 							:= '0';
-   signal rst 		: std_logic 							:= '0';
-   signal addr		: std_logic_vector(5 downto 0)			:= (others=> '0');
-   signal iowrite	: std_logic_vector(7 downto 0)			:= (others=> '0');
-   signal wr 		: std_logic 							:= '0';
-   signal rd 		: std_logic 							:= '0';
-   signal MISO 		: std_logic 							:= '0';
+--Constant
+constant N 		: integer := 8;
+constant bauds 	: integer := 115200;
+constant sysclk : real := 50.0e6 ; -- 50MHz
+constant clkdiv : integer := integer(sysclk / real(bauds));
 
- 	--Outputs
-   signal ioread	: std_logic_vector(7 downto 0);
-   signal SCK		: std_logic;
-   signal MOSI		: std_logic;
+--Inputs
+signal clk 		: std_logic 							:= '0';
+signal rst 		: std_logic 							:= '0';
+signal addr		: std_logic_vector(5 downto 0)			:= (others=> '0');
+signal iowrite	: std_logic_vector(7 downto 0)			:= (others=> '0');
+signal wr 		: std_logic 							:= '0';
+signal rd 		: std_logic 							:= '0';
+signal MISO 		: std_logic 							:= '0';
 
-   -- Clock period definitions
-   constant clk_period : 		time := 10 ns;
-   constant clk_div_period : 	time := 115200 ns;
+--Outputs
+signal ioread	: std_logic_vector(7 downto 0);
+signal SCK		: std_logic;
+signal MOSI		: std_logic;
+
+-- Clock period definitions
+constant clk_period : 		time := 10 ns;
+constant clk_div_period : 	time := 115200 ns;
  
 BEGIN
  
@@ -67,7 +67,7 @@ BEGIN
         );
 
    -- Clock process definitions
-   clk_process :process
+clk_process :process
    begin
 		clk <= '0';
 		wait for clk_period/2;
@@ -76,12 +76,13 @@ BEGIN
    end process;
   
    -- Stimulus process
-   stim_proc: process
-   begin		
+stim_proc: process
+   begin	
+   
       -- hold reset state for 100 ns.
-		-- rst <= '1';
-      -- wait for 100 ns;
-		-- rst <= '0';
+		rst <= '1';
+      wait for 100 ns;
+		rst <= '0';
 		wr <= '1';
 		
 

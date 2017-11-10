@@ -34,18 +34,18 @@ type T_state is (idle, bitsdata);
 signal state_next, state : T_state;
 
 -- Counter
-signal spicounter, spicounter_next : 		unsigned (N-1 downto 0) 			:= (others => '0');		-- Number of bit received counter
+signal spicounter, spicounter_next : 		UNSIGNED (N-1 downto 0) 			:= (others => '0');		-- Number of bit received counter
 
 -- data buffer
 signal data, data_next :					STD_LOGIC_VECTOR (N-1 downto 0)		:= (others => '0');		-- data received
 
--- clock
+-- clock signals
 signal divided_clock : 						STD_LOGIC							:= '0';
-signal tc0, tc1 :							STD_LOGIC							:= '0';
+signal tc0, tc1 :							STD_LOGIC							:= '0';  -- not used
 
 begin
 
--- Clock divider
+-- Clock divider to have SPI SCK
    clk_divider: diviseur_generique 
    Generic map (
 		  clkdiv	=> clkdiv )
@@ -70,7 +70,7 @@ begin
 end process clock_tick;
 
 -- Calculate the next step
-change_state: process(state, spicounter, spi_start, divided_clock)
+change_state: process(spi_start, divided_clock)
 begin
 	state_next 							<= state;
 	spicounter_next						<= spicounter;
@@ -97,7 +97,7 @@ begin
 	end case;
 end process change_state;
 
--- Circuit select 
+-- Circuit select 1 when idle 0 when the component received
 SPI_CS 			<= '1' when state_next = idle else '0';
 
 -- Data out
