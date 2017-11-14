@@ -34,18 +34,18 @@ type T_state is (idle, bitsdata);
 signal state_next, state : T_state;
 
 -- Counter
-signal spicounter, spicounter_next : 		unsigned (N-1 downto 0) 			:= (others => '0');		-- Number of bit received counter
+signal spicounter, spicounter_next : 		UNSIGNED (N-1 downto 0) 			:= (others => '0');		-- Number of bit received counter
 
 -- data buffer
-signal data, data_next :					STD_LOGIC_VECTOR (N-1 downto 0)		:= (others => '0');		-- data received
+signal data :								STD_LOGIC_VECTOR (N-1 downto 0)		:= (others => '0');		-- data received
 
--- clock
+-- clock signals
 signal divided_clock : 						STD_LOGIC							:= '0';
-signal tc0, tc1 :							STD_LOGIC							:= '0';
+signal tc0, tc1 :							STD_LOGIC							:= '0';  -- not used
 
 begin
 
--- Clock divider
+-- Clock divider to have SPI SCK
    clk_divider: diviseur_generique 
    Generic map (
 		  clkdiv	=> clkdiv )
@@ -62,49 +62,52 @@ clock_tick: process(clk)
 begin
 	if rst = '1' then
 		state 			<= idle;
+		spicounter		<= (others => '0');
 	elsif rising_edge(clk) then
 		state 			<= state_next;
-		data			<= data_next;
 		spicounter 		<= spicounter_next;
 	end if;
 end process clock_tick;
 
 -- Calculate the next step
-change_state: process(state, spicounter, spi_start, divided_clock)
+change_state: process(spi_start, divided_clock, state)
 begin
 	state_next 							<= state;
 	spicounter_next						<= spicounter;
-	data_next							<= data;
 	
 	case state is
 		when idle =>
 			if spi_start = '1' then
 				state_next 				<= bitsdata;
+				-- reset the data sequence
+				data					<= (others => '0');	
 			end if;
-			data_next					<= (others => '0');	-- reset counter 
+			-- reset counter 
 			spicounter_next 			<= (others => '0');
 			
 		when bitsdata =>
-			if falling_edge(divided_clock) then							-- Synchronize the reception of data on the SPI clock 
-				data_next 				<= data(6 downto 0) & SPI_MISO; -- Add on the LSB the received bit.
+			if divided_clock = '0' and spi_start = '0' then				-- Synchronize the reception of data on the SPI clock excluding the case when spi_start activate the process
+				data 					<= data(6 downto 0) & SPI_MISO; -- Add on the LSB the received bit.
 				spicounter_next			<= spicounter + 1;				-- Add one to the counter of bit received
+
+				if spicounter < N then
+					state_next			<= bitsdata;
+				else
+					state_next			<= idle;
+				end if;
 			end if;
-			if spicounter <= N then
-				state_next 				<= bitsdata;
-			else
-				state_next 				<= idle;
-			end if;
-	end case;
+	end case;				
+	data_out 				<= data;
 end process change_state;
 
--- Circuit select 
+-- Circuit select 1 when idle 0 when the component received
 SPI_CS 			<= '1' when state_next = idle else '0';
 
 -- Data out
-data_out 		<= data_next;
+--data_out 		<= data;
 
 -- SPI Clock
-SPI_SCK <= divided_clock;
+SPI_SCK <= divided_clock when state = bitsdata else '1';
 
 end Behavioral;
 

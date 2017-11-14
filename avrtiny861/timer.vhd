@@ -177,7 +177,7 @@ architecture timer_architecture of timer is
       end if;
     end if;
   end process clock_tick;
-  
+
   -- Processus de generation des buffers signaux OC1A et OC1Abar  
   pp : process(reg_count, FOC1A)
   begin 
