@@ -10,35 +10,46 @@ entity diviseur_timer is
 end diviseur_timer;
 
 architecture architecture_diviseur_timer of diviseur_timer is
-
-signal divided_clk : std_logic := '0';
-signal cpt : std_logic_vector(2 downto 0) := "000";
-signal max_cpt : std_logic_vector(2 downto 0) := "000";
+-- Generated clock signal
+signal divided_clk : 			std_logic 						:= '0';
+-- Counter
+signal cpt : 					std_logic_vector(2 downto 0)	:= (others => '0');
+-- Max Counter value
+signal max_cpt : 				std_logic_vector(2 downto 0) 	:= (others => '0');
 
 begin
 
-  comptage: process(clk)
+  comptage: process(clk, rst)
   begin
-   if rising_edge(clk) then 
-	 if rst = '1' then
-	    cpt <= (others => '0');
-    elsif cpt < max_cpt then
-	    cpt <= std_logic_vector(unsigned(cpt) + 1);
-	 else	
-        cpt <= (others => '0');
-        divided_clk <= not(divided_clk);
-	 end if;
+	-- asynchronous reset
+	if rst = '1' then
+		-- reset counter
+	    cpt 				<= (others => '0');
+		-- reset generated clock
+		divided_clk			<= '0';
+    elsif rising_edge(clk) then 
+		if cpt < max_cpt then
+			-- increase the counter when the max counter value is not reached
+			cpt 			<= std_logic_vector(unsigned(cpt) + 1);
+		else
+			-- reset the counter when the max value is reached
+			cpt 			<= (others => '0');
+			-- Invert the generated clock to create a raising/falling edge signal 
+			divided_clk 	<= not(divided_clk);
+		end if;
 	end if;
   end process comptage;
 
+  -- assign the output to the generated clock
   clk_out <= divided_clk;
   
+  -- select the max value of the counter depending of the number of bit that must be counted
   with N select
-  max_cpt <= "000" when "00",
-	   "000" when "01",
-     "011" when "10",
-     "111" when "11",
-     "111" when others;
-	
+  max_cpt <= 	"000" when "00", -- divide by 1
+				"001" when "01", -- divide by 2
+				"011" when "10", -- divide by 4
+				"111" when "11", -- divide by 8
+				"111" when others;  -- max divison is 8
+				
 end architecture_diviseur_timer;
 
