@@ -2,54 +2,64 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.numeric_std.all;
 
+-- Entité diviseur du timer PWM
+  -- Sous la forme d'un diviseur de fréquence programmable
+  -- Permet de diviser la frequence d'une horloge en fonction des valeurs DTPS11 et DTPS10 du registre TCCR1B
 entity diviseur_timer is
-    Port ( clk : in  STD_LOGIC;
-           rst : in  STD_LOGIC;
-		   N : in STD_LOGIC_VECTOR(1 downto 0);
-           clk_out : out  STD_LOGIC);
+    Port ( clk : 			in  STD_LOGIC;
+           rst : 			in  STD_LOGIC;
+		   N : 				in STD_LOGIC_VECTOR(1 downto 0);
+           clk_out : 		out  STD_LOGIC);
 end diviseur_timer;
 
 architecture architecture_diviseur_timer of diviseur_timer is
--- Generated clock signal
+
+-- Initialisations
+  -- l'horloge divisée  
 signal divided_clk : 			std_logic 						:= '0';
--- Counter
-signal cpt : 					std_logic_vector(2 downto 0)	:= (others => '0');
--- Max Counter value
-signal max_cpt : 				std_logic_vector(2 downto 0) 	:= (others => '0');
+  -- Compteur pour la division
+signal cpt : 					std_logic_vector(2 downto 0) 	:= "000";
+  -- valeur maximum du compteur
+signal max_cpt : 				std_logic_vector(2 downto 0) 	:= "000";
 
 begin
-
+  
+  -- Processus de comptage
   comptage: process(clk, rst)
   begin
-	-- asynchronous reset
 	if rst = '1' then
-		-- reset counter
-	    cpt 				<= (others => '0');
-		-- reset generated clock
+		-- En cas de reset, remise du compteur à 0
+		cpt 				<= (others => '0');
+		-- Remise à 0 de l'horloge
 		divided_clk			<= '0';
-    elsif rising_edge(clk) then 
+	elsif rising_edge(clk) then 
+		-- Cas où l'horloge est en front montant
 		if cpt < max_cpt then
-			-- increase the counter when the max counter value is not reached
+			-- Incrementation du compteur si il est inferieur à la valeur maximum
 			cpt 			<= std_logic_vector(unsigned(cpt) + 1);
-		else
-			-- reset the counter when the max value is reached
+		else	
+			-- Remise du compteur à 0 
 			cpt 			<= (others => '0');
-			-- Invert the generated clock to create a raising/falling edge signal 
+			-- Le contraire de sa valeur est affectée à l'horloge divisée pour réaliser un front montant/descendant
 			divided_clk 	<= not(divided_clk);
 		end if;
-	end if;
+	 end if;
   end process comptage;
 
-  -- assign the output to the generated clock
+  -- Affectation de la valeur de l'horloge divisée à l'horloge de sortie
   clk_out <= divided_clk;
   
-  -- select the max value of the counter depending of the number of bit that must be counted
+  -- Determination de la valeur du maximum du compteur en fonction de la valeur N d'entrée sous la forme d'un multiplexeur
   with N select
-  max_cpt <= 	"000" when "00", -- divide by 1
-				"001" when "01", -- divide by 2
-				"011" when "10", -- divide by 4
-				"111" when "11", -- divide by 8
-				"111" when others;  -- max divison is 8
-				
+    -- si N vaut 0 le maximum vaut 0 ce qui correspond à une division par 8
+    max_cpt <= 	"000" when "00",
+    -- si N vaut 1 le maximum vaut 1 ce qui correspond à une division par 2
+				"001" when "01",
+    -- si N vaut 2 le maximum vaut 3 ce qui correspond à une division par 8
+				"011" when "10",
+    -- si N vaut 3 le maximum vaut 7 ce qui correspond à une division par 8
+				"111" when "11",
+    -- dans tous les autres cas le maximum vaut 7
+				"111" when others;
+	
 end architecture_diviseur_timer;
-
