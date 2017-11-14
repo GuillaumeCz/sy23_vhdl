@@ -106,13 +106,14 @@ begin
 			end if;
 			-- Test if all bit was send.
 			if to_integer(unsigned(spicounter_next)) < N then
-					-- If the number of bits send is lower than the number bits to send the state machine stay in sending mode
-					next_state	 	<= bitsdata;
-				else
-					-- go to idle mode
-					next_state		<= idle;
-				end if;
-		when others => 
+				-- If the number of bits send is lower than the number bits to send the state machine stay in sending mode
+				next_state	 	<= bitsdata;
+			else
+				-- go to idle mode
+				next_state		<= idle;
+				
+			end if;
+		when others => NULL;
 	end case;
 end process change_state;
 
