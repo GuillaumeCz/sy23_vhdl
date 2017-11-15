@@ -1,13 +1,13 @@
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 
--- TestBench du composant usi 
+-- TestBench du composant usi
 ENTITY usi_tb IS
 END usi_tb;
- 
-ARCHITECTURE behavior OF usi_tb IS 
- 
--- Inclusion du composant usi 
+
+ARCHITECTURE behavior OF usi_tb IS
+
+-- Inclusion du composant usi
 COMPONENT usi
 	Generic (BASE_ADDR	: integer := 16#0D#);
     Port ( clk : 		in  STD_LOGIC;
@@ -53,11 +53,11 @@ signal MOSI		: std_logic;
 
 -- Définition de la période d'horloge
 constant clk_period : 		time := 10 ns;
- 
+
 BEGIN
- 
+
 	-- Instantiation du composant
-   uut: usi 
+   uut: usi
    Generic map (
 		  BASE_ADDR 		=> 16#0D# )
    PORT MAP (
@@ -81,12 +81,12 @@ clk_process :process
 		clk <= '1';
 		wait for clk_period/2;
    end process;
-  
+
 -- Processus de stimulation, test du composant
 stim_proc: process
-begin	
+begin
 
-	-- initialisation du composant avec l'envoi d'un signal de reset pendant 50ns 
+	-- initialisation du composant avec l'envoi d'un signal de reset pendant 50ns
 	rst <= '1';
 	-- wait for 50 ns;
 	rst <= '0';
@@ -96,31 +96,31 @@ begin
 	wait for clk_period*1;
 
 	-- Ecriture du registre de contrôle USICR
-	addr 		<= "001111";  -- 0x0F
+	addr 		<= "001101";  -- 0x0F
 	iowrite 	<= "11010011";
 	wait for clk_period*1;
 
 	-- Ecriture du registre de données USIDR et par conséquent envoie de l'octet 0x35 sur le pin MOSI
-	addr 		<= "001101";	-- 0x0D
+	addr 		<= "001111";	-- 0x0D
 	iowrite 	<= "00110101";
 	wait for clk_period*1;
-	wr 		<= '1';	  
+	wr 		<= '1';
 	wait for clk_period*1;
-	wr 		<= '0';	
+	wr 		<= '0';
 	wait for clk_period*1;
 
 	-- Désactivation du mode écriture
 	wr 		<= '0';
 
-	-- Attente de 20 fois la période d'horloge SCK 
+	-- Attente de 20 fois la période d'horloge SCK
 	wait for clk_period*clkdiv*20;
 
 	-- Mise à l'addresse du port USIDR et activation du mode lecture
-	addr 		<= "001101";	-- 0x0D
+	addr 		<= "001111";	-- 0x0D
 	wait for clk_period*1;
-	rd 		<= '1';	  
+	rd 		<= '1';
 	wait for clk_period*1;
-	rd 		<= '0';	 
+	rd 		<= '0';
 	-- Envoie d'un bit de l'octet 0x35 chaque période d'horloge SCK
 	MISO <= '0';
 	wait for clk_period*clkdiv;
