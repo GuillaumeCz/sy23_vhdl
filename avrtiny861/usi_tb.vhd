@@ -40,7 +40,7 @@ signal iowrite :			std_logic_vector (7 downto 0) 		:= (others=> '0');
 signal rd :					std_logic							:= '0';
 -- Signal d'entré d'écriture
 signal wr :					std_logic							:= '0';
--- Signal d'envoie de bit par le maitre à l'esclave
+-- Signal d'envoie de bit du maitre à l'esclave
 signal MISO		: std_logic								:= '0';
 
 --Sorties
@@ -100,7 +100,7 @@ begin
 	iowrite 	<= "11010011";
 	wait for clk_period*1;
 
-	-- Ecriture du registre de données USIDR et par conséquent envoie de l'octet 0x35 sur le pin MOSI
+	-- Ecriture du registre de données USIDR et par conséquent envoi de l'octet 0x35 sur le pin MOSI
 	addr 		<= "001111";	-- 0x0D
 	iowrite 	<= "00110101";
 	wait for clk_period*1;
