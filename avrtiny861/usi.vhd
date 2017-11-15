@@ -38,7 +38,7 @@ component SPI_RX
            data_out : 	out  STD_LOGIC_VECTOR (N-1 downto 0));		-- data received on N bits
 end component;
 
--- Déclaration du composant récepteur SPI
+-- Déclaration du composant transmetteur SPI
 component SPI_TX
 	Generic (N : integer := 8);
     Port ( data_in : 	in  STD_LOGIC_VECTOR (N-1 downto 0);		-- data transmitted
@@ -99,7 +99,7 @@ begin
 			);
 
 
--- Process de changement d'état
+-- Processus de changement d'état
 clock_tick: process(clk)
 -- Variable locale exprimant la valeur de l'adresse du registre pointé
 variable a_int : natural;
@@ -114,7 +114,7 @@ begin
 		a_int := to_integer(unsigned(addr));
 		-- Concatenation des signaux d'entrés de lecture et ecriture
 		rdwr  := rd & wr;
-		-- Concatenation des signaux témoint de traitement
+		-- Concatenation des signaux témoins de traitement
 		CS_TXRX		:= SPI_TX_CS & SPI_RX_CS;
 		-- Mise à 0 des signaux d'activation des composants
 		SPI_TX_start <= '0';
@@ -123,7 +123,7 @@ begin
 		-- Dans le cas où l'adresse en entrée corresponde au registre USIDR
 		  case rdwr is
 			 when "10" => -- rd
-				-- Lecture à chaque signal d'horloge du registre de données
+				-- Lecture du registre de données à chaque signal d'horloge 
 				ioread <= reg_usidr;
 				if (CS_TXRX = "11") then
 					-- Si le composant de réception n'est pas activé, le composant est activé
@@ -161,8 +161,8 @@ begin
 	end if;
 end process clock_tick;
 
--- Ecrit reg_usidr avec la valeur de d'entrée du composant usi quand le composant usi est en mode écriture et l'adresse correspond à l'addresse du registre de données
--- Ecrit reg_usidr avec la valeur de sortie du recepteur RX_out sinon
+-- Ecrit reg_usidr avec la valeur d'entrée du composant USI quand celui-ci est en mode écriture et l'adresse correspond à l'addresse du registre de données
+-- Dans le cas contraire : ecrit reg_usidr avec la valeur de sortie du recepteur RX_out
 reg_usidr <= iowrite	when  wr ='1' and to_integer(unsigned(addr)) = USIDR else
 			 RX_out;
 
@@ -171,10 +171,11 @@ SCK			<= SPI_TX_SCK when SPI_TX_CS = '0' and SPI_RX_CS = '1' else
 			   SPI_RX_SCK when SPI_TX_CS = '1' and SPI_RX_CS = '0' else
 			   '0';
 
--- Active ou désactive l'horloge si le registre de est en mode
+-- Selection de l'horloge en fonction des bits USICS du registre USICR 
+  -- horloge interne si 
 control_clock <= '0' 			when reg_usicr (3 downto 1) = "000" else
 				 activate_clock when reg_usicr (3 downto 1) = "001";
--- Active ou désactive l'horloge si le registre de est en mode
+-- Definition de la valeur de l'horloge d'activation en fonction du nombre de fils de la transmission
 activate_clock <= clk 			when reg_usicr(5 downto 4) = "01" else
 				 '0';
 
