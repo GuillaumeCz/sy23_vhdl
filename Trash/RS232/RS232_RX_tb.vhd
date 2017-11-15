@@ -32,42 +32,37 @@ USE ieee.std_logic_1164.ALL;
 -- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
  
-ENTITY RS232_tb IS
-END RS232_tb;
+ENTITY RS232_RX_tb IS
+END RS232_RX_tb;
  
-ARCHITECTURE behavior OF RS232_tb IS 
+ARCHITECTURE behavior OF RS232_RX_tb IS 
  
     -- Component Declaration for the Unit Under Test (UUT)
  
-    COMPONENT RS232
+    COMPONENT RS232_RX
     PORT(
-         clk : IN  std_logic;
-         start : IN  std_logic;
-         rst : IN  std_logic;
-         datas : IN  std_logic_vector(7 downto 0);
-         clk_div : IN  std_logic_vector(7 downto 0);
-         empty : OUT  std_logic;
-			x: out integer range 0 to 4;
-			y: out STD_LOGIC;
-			z: out STD_LOGIC;
-         TX : OUT  std_logic
+        clk:		in std_logic;
+		rst:		in std_logic;
+		RX :		in std_logic;
+		data:		out std_logic_vector(7 downto 0);
+		rx_done: 	out std_logic
         );
     END COMPONENT;
     
 
    --Inputs
-   signal clk : std_logic := '0';
-   signal start : std_logic := '0';
-   signal rst : std_logic := '0';
-   signal datas : std_logic_vector(7 downto 0) := (others => '0');
-   signal clk_div : std_logic_vector(7 downto 0) := (others => '0');
+   signal clk 		: std_logic 							:= '0';
+   signal rst 		: std_logic 							:= '0';
+   signal RX 		: std_logic  							:= '1';
 
  	--Outputs
-   signal empty : std_logic;
-   signal TX : std_logic;
-	signal x: integer range 0 to 4;
-	signal y : std_logic;
-	signal z : std_logic;
+   signal data 		: std_logic_vector(7 downto 0);
+   signal rx_done	: std_logic;
+   
+   
+   signal x: STD_LOGIC_VECTOR (1 downto 0);
+   signal y: STD_LOGIC_VECTOR (3 downto 0);
+   signal z : STD_LOGIC_VECTOR (3 downto 0);
 
    -- Clock period definitions
    constant clk_period : time := 10 ns;
@@ -76,17 +71,12 @@ ARCHITECTURE behavior OF RS232_tb IS
 BEGIN
  
 	-- Instantiate the Unit Under Test (UUT)
-   uut: RS232 PORT MAP (
-          clk => clk,
-          start => start,
-          rst => rst,
-          datas => datas,
-          clk_div => clk_div,
-          empty => empty,
-			 x => x,
-			 y => y,
-			 z => z,
-          TX => TX
+   uut: RS232_RX PORT MAP (
+          clk 		=> clk,
+          rst 		=> rst,
+		  RX  		=> RX,
+          data 		=> data,
+          rx_done 	=> rx_done
         );
 
    -- Clock process definitions
@@ -97,26 +87,40 @@ BEGIN
 		clk <= '1';
 		wait for clk_period/2;
    end process;
- 
-	clk_div <= "00000000";
- 
+  
    -- Stimulus process
    stim_proc: process
    begin		
       -- hold reset state for 100 ns.
-		datas <= "10101100";
 		rst <= '1';
       wait for 100 ns;
 		rst <= '0';
 
 
       wait for clk_period*10;
-		
-		
-		
-		start <= '1';
-   -- insert stimulus here 
-
+	  wait for clk_period/2;
+	  RX <= '0';
+	  wait for clk_period*1;
+	  RX <= '1';
+	  wait for clk_period*8;
+	  RX <= '1';
+	  wait for clk_period*16;
+	  RX <= '1';
+	  wait for clk_period*16;
+	  RX <= '0';
+	  wait for clk_period*16;
+	  RX <= '1';
+	  wait for clk_period*16;
+	  RX <= '0';
+	  wait for clk_period*16;
+	  RX <= '0';
+	  wait for clk_period*16;
+	  RX <= '0';
+	  wait for clk_period*16;
+	  RX <= '1';
+	  wait for clk_period*8;
+	  RX <= '1';
+	  wait for clk_period*16;
       wait;
    end process;
 
