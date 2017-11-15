@@ -15,6 +15,7 @@ end SPI_TX;
 
 architecture Behavioral of SPI_TX is
 
+-- Déclaration du composant de division de fréquence
 component diviseur_generique
 	Generic(clkdiv : integer := 2);
     Port ( clk : in  STD_LOGIC;
@@ -24,29 +25,29 @@ component diviseur_generique
            clk_out : out  STD_LOGIC);
 end component;
 
--- constant
+-- Constante de division de fréquence d'horloge pour se synchroniser à l'horloge SCK
 constant bauds : integer := 115200;
 constant sysclk : real := 50.0e6 ; -- 50MHz
 constant clkdiv : integer := integer(sysclk / real(bauds));
 
--- Machine State
+-- Machine à état et son buffer
 type T_state is (idle, bitsdata);
 signal current_state, next_state : T_state;
 
--- Number of bits send counters.
+-- Compteur de bits envoyés et son buffer
 signal spicounter, spicounter_next :	STD_LOGIC_VECTOR(N-1 downto 0)		:= (others => '0');
 
--- data_in register that can be modified at will. 
+-- Registre de data qui va être modifié au cours de l'envoie des bits
 signal data_buffer : 					STD_LOGIC_VECTOR (N-1 downto 0)		:= (others => '0');
 
--- clock signals
+-- Horloge avec fréquence divisée
 signal divided_clock :					STD_LOGIC							:= '0';
 signal tc0, tc1 :						STD_LOGIC							:= '0'; -- not used
 
 begin
 
--- Clock divider to have SPI SCK
-   clk_divider: diviseur_generique 
+-- Générateur d'horloge SCK
+clk_divider: diviseur_generique 
    Generic map (
 		  clkdiv	=> clkdiv )
    PORT MAP (
@@ -57,70 +58,66 @@ begin
 		  clk_out  => divided_clock
 		  );
 
--- Modify the state machine
-clock_tick: process(clk,rst)
+-- Processus de modification de la machine à Etat
+change_state: process(clk,rst)
 begin
-	-- asynchrone reset system
+	-- Système de reset asynchrone
 	if rst = '1' then
-		-- current_state on idle
+		-- Mise à l'état initial de la machine à état
 		current_state 	<= idle;
-		-- counter reset
+		-- Mise à zéro du compteur
 		spicounter 		<= (others => '0');
-		-- Set the output bit to send to 0 
+		-- Mise à zéro du bit de sortie
 		SPI_MOSI 		<= '0';
 	elsif rising_edge(clk) then
-		-- update counter and state on clock rising_edge
+		-- Mise à jour de l'état et du compteur à chaque front montant
 		current_state 	<= next_state;
 		spicounter 		<= spicounter_next;
-		-- send the output bit 
-		SPI_MOSI 		<= data_buffer(N-1); --data_out;
+		-- Envoie du Most Significant Bit du buffer sur l'esclave
+		SPI_MOSI 		<= data_buffer(N-1);
 	end if;
-end process clock_tick;
+end process change_state;
 
--- Calculate the next step
-change_state: process (spi_start, divided_clock)
+-- Processus d'incrémentation du compteur
+counter_increment: process (spi_start, divided_clock)
 begin
-	-- set the next state and counter on the current state and counter
+	-- Assignation des valeurs du compteur et de la machine à état aux buffers
 	next_state	 					<= current_state;
 	spicounter_next 				<= spicounter;
 	case current_state is 
 		when idle =>
-			-- When idle the compenent reset the counter to 0.
+			-- A l'état initial remise à zéro du compteur
 			spicounter_next 		<= (others => '0');
-			
-			-- Change the next state if the start of a transmission is on '1'
+			-- Change d'état si le signal de début de transmission est activé
 			if spi_start = '1' then
-				-- save the sequence of bit that will be send
+				-- Sauvegarde la séquence de bit à envoyé dans le buffer
 				data_buffer			<= data_in;
-				-- change state
+				-- Passe à l'état d'envoie de bit
 				next_state	 		<= bitsdata;
 			end if;
 			
 		when bitsdata =>
-			-- Synchronize the transmission of data on the SPI clock 
+			-- Synchronise l'envoie des bits avec l'horloge SCK
 			if divided_clock = '1' then							
-				-- Add one to the counter
+				-- Incrémente le compteur
 				spicounter_next	 	<= std_logic_vector(unsigned(spicounter) + 1);
-				-- Shift the register to place the next bit to send on the Most Significant Bit.
+				-- Décale le registre pour placer le prochain bit à envoyé à la position du Most Significant Bit.
 				data_buffer			<= data_buffer(N-2 downto 0) & '0'; 
 			end if;
-			-- Test if all bit was send.
+			-- Si tout les bits ont été envoyés on reviens à l'état initial sinon on reste dans le même état
 			if to_integer(unsigned(spicounter_next)) < N then
-				-- If the number of bits send is lower than the number bits to send the state machine stay in sending mode
-				next_state	 	<= bitsdata;
+				next_state	 		<= bitsdata;
 			else
-				-- go to idle mode
-				next_state		<= idle;
-				
+				next_state			<= idle;
 			end if;
 		when others => NULL;
 	end case;
-end process change_state;
+end process counter_increment;
 
--- Circuit select 
+-- Signal témoignant de l'activation de la transmission si la machine à état est en mode bitsdata
 SPI_CS 			<= '1' when current_state = idle else '0';
 
--- SPI Clock
+-- Envoie de l'horloge divisée SCK afin de synchroniser la réception
 SPI_SCK			<= divided_clock;
 
 end Behavioral;

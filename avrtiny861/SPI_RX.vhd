@@ -15,38 +15,39 @@ end SPI_RX;
 
 architecture Behavioral of SPI_RX is
 
-	component diviseur_generique
+-- Déclaration du composant de division de fréquence
+component diviseur_generique
 	Generic(clkdiv : integer := 2);
     Port ( clk : in  STD_LOGIC;
            rst : in  STD_LOGIC;
            tc0 : out  STD_LOGIC;
            tc1 : out  STD_LOGIC;
            clk_out : out  STD_LOGIC);
-	end component;
+end component;
 
--- constant
+-- Constante de division de fréquence d'horloge pour se synchroniser à l'horloge SCK
 constant bauds : integer := 115200;
 constant sysclk : real := 50.0e6 ; -- 50MHz
 constant clkdiv : integer := integer(sysclk / real(bauds));
 	
---state_next machine
+-- Machine à état et son buffer
 type T_state is (idle, bitsdata);
-signal state_next, state : T_state;
+signal state_next, current_state : T_state;
 
--- Counter
+-- Compteur de bits envoyés et son buffer
 signal spicounter, spicounter_next : 		UNSIGNED (N-1 downto 0) 			:= (others => '0');		-- Number of bit received counter
 
--- data buffer
+-- Registre de data reçu
 signal data :								STD_LOGIC_VECTOR (N-1 downto 0)		:= (others => '0');		-- data received
 
--- clock signals
+-- Horloge avec fréquence divisée
 signal divided_clock : 						STD_LOGIC							:= '0';
 signal tc0, tc1 :							STD_LOGIC							:= '0';  -- not used
 
 begin
 
--- Clock divider to have SPI SCK
-   clk_divider: diviseur_generique 
+-- Générateur d'horloge SCK
+clk_divider: diviseur_generique 
    Generic map (
 		  clkdiv	=> clkdiv )
    PORT MAP (
@@ -57,57 +58,66 @@ begin
 		  clk_out  => divided_clock
 		  );
 
--- Update the state
+-- Processus de modification de la machine à Etat
 clock_tick: process(clk)
 begin
 	if rst = '1' then
-		state 			<= idle;
+		-- Mise à l'état initial de la machine à état
+		current_state 	<= idle;
+		-- Mise à zéro du compteur
 		spicounter		<= (others => '0');
 	elsif rising_edge(clk) then
-		state 			<= state_next;
+		-- Mise à jour de l'état et du compteur à chaque front montant
+		current_state 			<= state_next;
 		spicounter 		<= spicounter_next;
 	end if;
 end process clock_tick;
 
--- Calculate the next step
-change_state: process(spi_start, divided_clock, state)
+-- Processus d'incrémentation du compteur
+change_state: process(spi_start, divided_clock, current_state)
 begin
-	state_next 							<= state;
+	-- Assignation des valeurs du compteur et de la machine à état aux buffers
+	state_next 							<= current_state;
 	spicounter_next						<= spicounter;
 	
-	case state is
+	case current_state is
 		when idle =>
+			-- Change d'état si le signal de début de transmission est activé
 			if spi_start = '1' then
+				-- Mise à l'état de réception des données
 				state_next 				<= bitsdata;
-				-- reset the data sequence
+				-- Mise à zéro des données reçu
 				data					<= (others => '0');	
 			end if;
-			-- reset counter 
+			-- Mise à zéro du compteur
 			spicounter_next 			<= (others => '0');
 			
 		when bitsdata =>
-			if divided_clock = '0' and spi_start = '0' then				-- Synchronize the reception of data on the SPI clock excluding the case when spi_start activate the process
+			-- Si l'horloge divisée à un front descendant, on synchronise la réception avec les données transmisent sur un front montant
+			if divided_clock = '0' then				
+				-- On décale vers la gauche le registre des données reçu et on ajoute le bit reçu à l'instant
 				data 					<= data(6 downto 0) & SPI_MISO; -- Add on the LSB the received bit.
-				spicounter_next			<= spicounter + 1;				-- Add one to the counter of bit received
-
+				-- On incrémente le compteur de bit
+				spicounter_next			<= spicounter + 1;	
+				
+				-- Si le compteur de bit reçu est supérieur au nombre de bit max on reviens à l'état initial sinon on reste au même état
 				if spicounter < N then
 					state_next			<= bitsdata;
 				else
 					state_next			<= idle;
 				end if;
 			end if;
-	end case;				
-	data_out 				<= data;
+	end case;
+	-- Envoie de la valeur de données sur la sortie des données
+	data_out			<= data;
 end process change_state;
 
--- Circuit select 1 when idle 0 when the component received
+-- Signal témoignant de l'activation de la réception si la machine à état est en mode bitsdata
 SPI_CS 			<= '1' when state_next = idle else '0';
 
--- Data out
---data_out 		<= data;
 
--- SPI Clock
-SPI_SCK <= divided_clock when state = bitsdata else '1';
+-- Envoie de l'horloge divisée SCK afin de synchroniser la transmission
+SPI_SCK <= divided_clock when current_state = bitsdata else '1';
 
 end Behavioral;
 
