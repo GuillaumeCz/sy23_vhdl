@@ -13,22 +13,19 @@ entity SPI is
            SPI_SCK : 	out  STD_LOGIC;								-- SPI clock
            SPI_CS : 	out  STD_LOGIC;								-- select circuit
 		   data_out : 	out  STD_LOGIC_VECTOR (M-1 downto 0);		-- data received on N bits
-           SPI_MOSI : 	out  STD_LOGIC;		-- data received on N bits
-		   x: out STD_LOGIC_VECTOR (1 downto 0);
-		   y: out STD_LOGIC_VECTOR (N-1 downto 0);
-		   z: out STD_LOGIC_VECTOR (N-1 downto 0));
+           SPI_MOSI : 	out  STD_LOGIC);							-- data received on N bits
 end SPI;
 
 architecture Behavioral of SPI is
 
-	component diviseur_generique
+component diviseur_generique
 	Generic(clkdiv : integer := 2);
-    Port ( clk : in  STD_LOGIC;
-           rst : in  STD_LOGIC;
-           tc0 : out  STD_LOGIC;
-           tc1 : out  STD_LOGIC;
-           clk_out : out  STD_LOGIC);
-	end component;
+    Port ( clk : 		in  STD_LOGIC;
+           rst : 		in  STD_LOGIC;
+           tc0 : 		out  STD_LOGIC;
+           tc1 : 		out  STD_LOGIC;
+           clk_out : 	out  STD_LOGIC);
+end component;
 
 -- constant
 constant bauds : integer := 115200;
@@ -150,12 +147,4 @@ SPI_SCK 		<= divided_clock;
 -- Data out
 data_out 		<= MISO_to_data;
 
-
-
-y <= std_logic_vector(wcounter);
-z <= std_logic_vector(rcounter);
-with state select
-x <= "00" when idle,
-	 "01" when bitswrite,
-	 "10" when bitsread;
 end Behavioral;

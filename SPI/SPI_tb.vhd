@@ -20,10 +20,7 @@ ARCHITECTURE behavior OF SPI_tb IS
            SPI_SCK : 	out  STD_LOGIC;								-- SPI clock
            SPI_CS : 	out  STD_LOGIC;								-- select circuit
 		   data_out : 	out  STD_LOGIC_VECTOR (M-1 downto 0);		-- data received on N bits
-           SPI_MOSI : 	out  STD_LOGIC;		-- data received on N bits
-		   x: out STD_LOGIC_VECTOR (1 downto 0);
-		   y: out STD_LOGIC_VECTOR (N-1 downto 0);
-		   z: out STD_LOGIC_VECTOR (N-1 downto 0));
+           SPI_MOSI : 	out  STD_LOGIC);							-- data received on N bits
     END COMPONENT;
     
    --Constant
@@ -45,14 +42,6 @@ ARCHITECTURE behavior OF SPI_tb IS
    signal TX 		: std_logic;
    signal SPI_CS	: std_logic;
    signal SPI_SCK	: std_logic;
-   
-   
-   signal x: STD_LOGIC_VECTOR (1 downto 0);
-   signal y: STD_LOGIC_VECTOR (N-1 downto 0);
-   signal z: STD_LOGIC_VECTOR (N-1 downto 0);
-   
-   
-   
 
    -- Clock period definitions
    constant clk_period : 		time := 10 ns;
@@ -74,10 +63,8 @@ BEGIN
 			SPI_SCK		=> SPI_SCK,
 			SPI_CS 		=> SPI_CS,
 			data_out  	=> data_out,
-			SPI_MOSI  	=> TX,
-			x => x,
-			y => y,
-			z => z);
+			SPI_MOSI  	=> TX
+			);
 
    -- Clock process definitions
    clk_process :process
