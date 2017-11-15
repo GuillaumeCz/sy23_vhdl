@@ -91,37 +91,44 @@ begin
 	-- activation de l'écriture
 	wr <= '1';
 	wait for clk_period*1;
+
 	
 	-- Ecriture du registre DDR
-	iowrite		<= "11111111"; 	-- 0xFF
+	iowrite		<= "10111000"; 	-- 0xFF
 	addr 		<= "011010";	-- 0x1A
 	wait for clk_period*1;
+	wr <= '0';
+	wait for clk_period*1;
 	
-	-- Ecriture du registre PORT
-	iowrite		<= "00110101"; 	-- 0x35
-	addr 		<= "011011";	-- 0x1B
+	-- Ecriture du registre PORT	
+	-- iowrite		<= "00110101"; 	-- 0x35	
+	-- addr 		<= "011011";	-- 0x1B
+	wait for clk_period*1;
+	wr <= '1';
 	wait for clk_period*1;
 	
 	-- Passage du mode écriture au mode lecture
 	wr <= '0';
-	rd <= '1';
 	wait for clk_period*1;
 	
-	-- -- Lecture du registre PIN
-	-- addr 		<= "011001";	-- 0x19
-	-- wait for clk_period*1;
 
 	-- Envoie d'une donnée à l'entrée du port
-		-- inoutport	<= "11110000";	-- 0xF0
+	inoutport(6)	<= '1';	-- "U1UUU000"
+	inoutport(2)	<= '0';
+	inoutport(1)	<= '0';
+	inoutport(0)	<= '0';
 	wait for clk_period*1;
 	
 	-- Lecture du registre PORT
 	addr 		<= "011011";	-- 0x1B
 	wait for clk_period*1;
 	
+	rd <= '1';
+	wait for clk_period*1;
+	
 	-- -- Lecture du registre PIN
-	-- addr 		<= "011001";	-- 0x19
-	-- wait for clk_period*1;
+	addr 		<= "011001";	-- 0x19
+	wait for clk_period*1;
 	  
       wait;
    end process;
