@@ -35,7 +35,7 @@ type T_state is (idle, bitsdata);
 signal current_state, next_state : T_state;
 
 -- Compteur de bits envoyés et son buffer
-signal spicounter, spicounter_next :	STD_LOGIC_VECTOR(N-1 downto 0)		:= (others => '0');
+signal spicounter, spicounter_next :	UNSIGNED(N-1 downto 0)				:= (others => '0');
 
 -- Registre de data qui va être modifié au cours de l'envoie des bits
 signal data_buffer : 					STD_LOGIC_VECTOR (N-1 downto 0)		:= (others => '0');
@@ -100,12 +100,12 @@ begin
 			-- Synchronise l'envoie des bits avec l'horloge SCK
 			if divided_clock = '1' then							
 				-- Incrémente le compteur
-				spicounter_next	 	<= std_logic_vector(unsigned(spicounter) + 1);
+				spicounter_next	 	<= spicounter + 1;
 				-- Décale le registre pour placer le prochain bit à envoyé à la position du Most Significant Bit.
 				data_buffer			<= data_buffer(N-2 downto 0) & '0'; 
+				-- Si tout les bits ont été envoyés on reviens à l'état initial sinon on reste dans le même état
 			end if;
-			-- Si tout les bits ont été envoyés on reviens à l'état initial sinon on reste dans le même état
-			if to_integer(unsigned(spicounter_next)) < N then
+			if spicounter_next < N then
 				next_state	 		<= bitsdata;
 			else
 				next_state			<= idle;

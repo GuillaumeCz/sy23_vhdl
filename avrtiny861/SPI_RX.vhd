@@ -101,7 +101,7 @@ begin
 				spicounter_next			<= spicounter + 1;	
 				
 				-- Si le compteur de bit reçu est supérieur au nombre de bit max on reviens à l'état initial sinon on reste au même état
-				if spicounter < N then
+				if spicounter_next < N then
 					state_next			<= bitsdata;
 				else
 					state_next			<= idle;
@@ -115,9 +115,9 @@ end process change_state;
 -- Signal témoignant de l'activation de la réception si la machine à état est en mode bitsdata
 SPI_CS 			<= '1' when state_next = idle else '0';
 
-
 -- Envoie de l'horloge divisée SCK afin de synchroniser la transmission
 SPI_SCK <= divided_clock when current_state = bitsdata else '1';
+
 
 end Behavioral;
 

@@ -28,17 +28,17 @@ constant sysclk : real := 50.0e6 ; -- 50MHz
 constant clkdiv : integer := integer(sysclk / real(bauds));
 
 -- Entrée
--- Signal d'entré d'une horloge
+-- Signal d'entrée d'une horloge
 signal clk : 				std_logic 		:= '0';
 -- Signal d'entré de remise à 0
 signal rst : 				std_logic 		:= '0';
--- Signal d'entré de adresse du registre pointé
+-- Signal d'entrée de adresse du registre pointé
 signal addr : 				std_logic_vector (5 downto 0);
--- Signal d'entré avec les valeurs du registre pointé par l'adresse precedente
+-- Signal d'entrée avec les valeurs du registre pointé par l'adresse precedente
 signal iowrite :			std_logic_vector (7 downto 0);
--- Signal d'entré de lecture
+-- Signal d'entrée de lecture
 signal rd :					std_logic		:= '0';
--- Signal d'entré d'écriture
+-- Signal d'entrée d'écriture
 signal wr :					std_logic		:= '0';
 -- Adresse de base
 signal BASE_ADDR : 			integer 		:= 16#19#;
@@ -94,12 +94,12 @@ begin
 	
 	-- Ecriture du registre DDR
 	iowrite		<= "11111111"; 	-- 0xFF
-	addr 		<= "110000";	-- 0x20
+	addr 		<= "011010";	-- 0x1A
 	wait for clk_period*1;
 	
 	-- Ecriture du registre PORT
 	iowrite		<= "00110101"; 	-- 0x35
-	addr 		<= "011001";	-- 0x19
+	addr 		<= "011011";	-- 0x1B
 	wait for clk_period*1;
 	
 	-- Passage du mode écriture au mode lecture
@@ -107,21 +107,21 @@ begin
 	rd <= '1';
 	wait for clk_period*1;
 	
-	-- Lecture du registre PIN
-	addr 		<= "011010";	-- 0x21
-	wait for clk_period*1;
+	-- -- Lecture du registre PIN
+	-- addr 		<= "011001";	-- 0x19
+	-- wait for clk_period*1;
 
 	-- Envoie d'une donnée à l'entrée du port
-	inoutport	<= "11110000";	-- 0xF0
+		-- inoutport	<= "11110000";	-- 0xF0
 	wait for clk_period*1;
 	
 	-- Lecture du registre PORT
-	addr 		<= "011001";	-- 0x21
+	addr 		<= "011011";	-- 0x1B
 	wait for clk_period*1;
 	
-	-- Lecture du registre PIN
-	addr 		<= "011010";	-- 0x21
-	wait for clk_period*1;
+	-- -- Lecture du registre PIN
+	-- addr 		<= "011001";	-- 0x19
+	-- wait for clk_period*1;
 	  
       wait;
    end process;
