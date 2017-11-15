@@ -67,6 +67,7 @@ signal SPI_TX_CS:  							std_logic := '0';
 -- Signal témoignant de l'activation de la réception
 signal SPI_RX_CS:  							std_logic := '0';
 
+
 -- Signal de sortie du composant de réception. Correspond à l'octet reçu
 signal RX_out: 								STD_LOGIC_VECTOR (7 downto 0);
 	
@@ -99,7 +100,7 @@ begin
 		  
 		  
 -- Process de changement d'état
-clock_tick: process(clk, SPI_RX_CS)
+clock_tick: process(clk)
 -- Variable locale exprimant la valeur de l'adresse du registre pointé
 variable a_int : natural;
 -- Variable local du mode de fonctionnement du timer (lecture / ecriture) 
@@ -160,10 +161,10 @@ begin
 	end if;
 end process clock_tick;
 
--- Ecrit reg_usidr avec la valeur de sortie du recepteur RX_out	quand le composant usi et en mode lecture et l'adresse correspond à l'addresse du registre de données
--- Ecrit reg_usidr avec la valeur de d'entrée du composant usi quand le composant usi et en mode écriture et l'adresse correspond à l'addresse du registre de données
-reg_usidr <= RX_out		when rd ='1' and to_integer(unsigned(addr)) = USIDR else
-			 iowrite	when wr ='1' and to_integer(unsigned(addr)) = USIDR ;
+-- Ecrit reg_usidr avec la valeur de d'entrée du composant usi quand le composant usi est en mode écriture et l'adresse correspond à l'addresse du registre de données
+-- Ecrit reg_usidr avec la valeur de sortie du recepteur RX_out sinon 
+reg_usidr <= iowrite	when  wr ='1' and to_integer(unsigned(addr)) = USIDR else
+			 RX_out;
 			 
 -- Affecte la valeur de l'horloge SPI en fonction du composant qui est utilisé sinon mets à 0 l'horloge SCK 
 SCK			<= SPI_TX_SCK when SPI_TX_CS = '0' and SPI_RX_CS = '1' else

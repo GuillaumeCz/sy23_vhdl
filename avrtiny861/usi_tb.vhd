@@ -88,7 +88,7 @@ begin
 
 	-- initialisation du composant avec l'envoi d'un signal de reset pendant 50ns 
 	rst <= '1';
-	wait for 50 ns;
+	-- wait for 50 ns;
 	rst <= '0';
 
 	-- Activation du mode écriture
@@ -104,6 +104,10 @@ begin
 	addr 		<= "001101";	-- 0x0D
 	iowrite 	<= "00110101";
 	wait for clk_period*1;
+	wr 		<= '1';	  
+	wait for clk_period*1;
+	wr 		<= '0';	
+	wait for clk_period*1;
 
 	-- Désactivation du mode écriture
 	wr 		<= '0';
@@ -116,7 +120,7 @@ begin
 	wait for clk_period*1;
 	rd 		<= '1';	  
 	wait for clk_period*1;
-
+	rd 		<= '0';	 
 	-- Envoie d'un bit de l'octet 0x35 chaque période d'horloge SCK
 	MISO <= '0';
 	wait for clk_period*clkdiv;
