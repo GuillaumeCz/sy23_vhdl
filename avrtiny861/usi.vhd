@@ -26,6 +26,7 @@ signal reg_usidr : STD_LOGIC_VECTOR (7 downto 0);
 signal reg_usisr : STD_LOGIC_VECTOR (7 downto 0);
 signal reg_usicr : STD_LOGIC_VECTOR (7 downto 0);
 
+-- Déclaration du composant récepteur SPI
 component SPI_RX
 	Generic (N : integer := 8);
     Port ( SPI_MISO : 	in  STD_LOGIC;								-- data received
@@ -37,6 +38,7 @@ component SPI_RX
            data_out : 	out  STD_LOGIC_VECTOR (N-1 downto 0));		-- data received on N bits
 end component;
 
+-- Déclaration du composant récepteur SPI
 component SPI_TX
 	Generic (N : integer := 8);
     Port ( data_in : 	in  STD_LOGIC_VECTOR (N-1 downto 0);		-- data transmitted
@@ -48,25 +50,25 @@ component SPI_TX
            SPI_MOSI : 	out  STD_LOGIC);							-- data transmitted
 end component;
 
-
--- constant
-constant bauds : integer := 115200;
-constant sysclk : real := 50.0e6 ; -- 50MHz
-constant clkdiv : integer := integer(sysclk / real(bauds));
-
--- clock
+-- Signaux permettant d'activer l'horloge
 signal control_clock :						STD_LOGIC							:= '0';
 signal activate_clock:						STD_LOGIC							:= '0';
 
-
+-- Signal d'activation de la transmission
 signal SPI_TX_start:  						std_logic := '0';
+-- Signal d'activation de la réception
 signal SPI_RX_start:  						std_logic := '0';
+-- Signal d'horloge de la transmission
 signal SPI_TX_SCK:  						std_logic := '0';
+-- Signal d'horloge de la réception
 signal SPI_RX_SCK:  						std_logic := '0';
+-- Signal témoignant de l'activation de la transmission
 signal SPI_TX_CS:  							std_logic := '0';
+-- Signal témoignant de l'activation de la réception
 signal SPI_RX_CS:  							std_logic := '0';
 
-signal RX_out: 								STD_LOGIC_VECTOR (7 downto 0);		-- data transmitted
+-- Signal de sortie du composant de réception. Correspond à l'octet reçu
+signal RX_out: 								STD_LOGIC_VECTOR (7 downto 0);
 	
 begin
 	Receiver: SPI_RX
@@ -96,42 +98,61 @@ begin
 			);
 		  
 		  
--- Modify the state machine
+-- Process de changement d'état
 clock_tick: process(clk, SPI_RX_CS)
-	variable a_int : 	natural;
-	variable rdwr : 	std_logic_vector(1 downto 0);
-	variable CS_TXRX : 	std_logic_vector (1 downto 0);
+-- Variable locale exprimant la valeur de l'adresse du registre pointé
+variable a_int : natural;
+-- Variable local du mode de fonctionnement du timer (lecture / ecriture) 
+variable rdwr : 	std_logic_vector(1 downto 0);
+-- Variable local du composant en cours de traitement (transmission/réception)
+variable CS_TXRX : 	std_logic_vector (1 downto 0);
 begin
 	if (rising_edge(clk)) then		
-		a_int 		:= to_integer(unsigned(addr));
-		rdwr 		:= rd & wr;
+		-- A chaque période de l'horloge 
+		-- Saisie de l'adresse en entré dans la variable local a_int
+		a_int := to_integer(unsigned(addr));
+		-- Concatenation des signaux d'entrés de lecture et ecriture 
+		rdwr  := rd & wr;
+		-- Concatenation des signaux témoint de traitement
 		CS_TXRX		:= SPI_TX_CS & SPI_RX_CS;
+		-- Mise à 0 des signaux d'activation des composants
 		SPI_TX_start <= '0';
 		SPI_RX_start <= '0';
 		if (a_int = USIDR) then
+		-- Dans le cas où l'adresse en entrée corresponde au registre USIDR
 		  case rdwr is
 			 when "10" => -- rd
+				-- Lecture à chaque signal d'horloge du registre de données
 				ioread <= reg_usidr;
 				if (CS_TXRX = "11") then
+					-- Si le composant de réception n'est pas activé, le composant est activé
 					SPI_RX_start 	<= '1';
 				end if;
 			 when "01" => -- wr
 				if (CS_TXRX = "11") then
+				-- Si le composant de transmission n'est pas activé, le composant est activé
 					SPI_TX_start 	<= '1';
 				end if;
 			 when others => NULL; 
 		  end case;
 		elsif (a_int = USISR) then
+		-- Dans le cas où l'adresse en entrée corresponde au registre USISR
 			case rdwr is
 				when "10" => -- rd
+					-- Lecture du registre d'interruption
 					ioread 	<= reg_usisr;
-				when "01" => NULL;-- wr
+				when "01" => NULL;
+				-- On ne peut pas écrire dans le registre des flags d'interruption
 				when others => NULL; 
 			end case;
 		elsif (a_int = USICR) then
+		-- Dans le cas où l'adresse en entrée corresponde au registre USICR
 			case rdwr is
 				when "10" => NULL; -- rd
+					-- Lecture du registre de contrôle dans ioread
+					ioread	<= reg_usicr;
 				when "01" => -- wr
+					-- Ecriture du registre de contrôle avec la valeur de iowrite
 					reg_usicr	<= iowrite;
 				when others => NULL; 
 			end case;
@@ -139,21 +160,20 @@ begin
 	end if;
 end process clock_tick;
 
--- reg_usidr <= RX_out	when bIOwriteactive = '1' else
-			 -- iowrite;
-
+-- Ecrit reg_usidr avec la valeur de sortie du recepteur RX_out	quand le composant usi et en mode lecture et l'adresse correspond à l'addresse du registre de données
+-- Ecrit reg_usidr avec la valeur de d'entrée du composant usi quand le composant usi et en mode écriture et l'adresse correspond à l'addresse du registre de données
 reg_usidr <= RX_out		when rd ='1' and to_integer(unsigned(addr)) = USIDR else
 			 iowrite	when wr ='1' and to_integer(unsigned(addr)) = USIDR ;
 			 
--- SPI Clock
+-- Affecte la valeur de l'horloge SPI en fonction du composant qui est utilisé sinon mets à 0 l'horloge SCK 
 SCK			<= SPI_TX_SCK when SPI_TX_CS = '0' and SPI_RX_CS = '1' else
 			   SPI_RX_SCK when SPI_TX_CS = '1' and SPI_RX_CS = '0' else 
 			   '0';
 
-
+-- Active ou désactive l'horloge si le registre de est en mode
 control_clock <= '0' 			when reg_usicr (3 downto 1) = "000" else
 				 activate_clock when reg_usicr (3 downto 1) = "001";
-
+-- Active ou désactive l'horloge si le registre de est en mode
 activate_clock <= clk 			when reg_usicr(5 downto 4) = "01" else 
 				 '0'; 
 	

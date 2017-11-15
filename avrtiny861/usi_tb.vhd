@@ -36,7 +36,7 @@ signal addr		: std_logic_vector(5 downto 0)			:= (others=> '0');
 signal iowrite	: std_logic_vector(7 downto 0)			:= (others=> '0');
 signal wr 		: std_logic 							:= '0';
 signal rd 		: std_logic 							:= '0';
-signal MISO 		: std_logic 							:= '0';
+signal MISO		: std_logic								:= '0';
 
 --Outputs
 signal ioread	: std_logic_vector(7 downto 0);
