@@ -123,7 +123,7 @@ begin
 		-- Dans le cas où l'adresse en entrée corresponde au registre USIDR
 		  case rdwr is
 			 when "10" => -- rd
-				-- Lecture du registre de données à chaque signal d'horloge 
+				-- Lecture du registre de données à chaque signal d'horloge
 				ioread <= reg_usidr;
 				if (CS_TXRX = "11") then
 					-- Si le composant de réception n'est pas activé, le composant est activé
@@ -172,7 +172,6 @@ SCK			<= SPI_TX_SCK when SPI_TX_CS = '0' and SPI_RX_CS = '1' else
 			   '0';
 
 -- Selection de l'horloge en fonction des bits USICS du registre USICR 
-  -- horloge interne si 
 control_clock <= '0' 			when reg_usicr (3 downto 1) = "000" else
 				 activate_clock when reg_usicr (3 downto 1) = "001";
 -- Definition de la valeur de l'horloge d'activation en fonction du nombre de fils de la transmission
